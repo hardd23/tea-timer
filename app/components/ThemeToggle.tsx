@@ -60,28 +60,30 @@ export default function ThemeToggle() {
       aria-pressed={theme === 'dark'}
       title={`Switch to ${nextThemeLabel} theme`}
     >
-      <span className="theme-toggle-thumb" aria-hidden="true" />
-      <svg
-        className="theme-toggle-icon theme-toggle-icon-sun"
-        viewBox="0 0 20 20"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        aria-hidden="true"
-      >
-        <circle cx="10" cy="10" r="3.1" />
-        <path d="M10 1.8v1.6M10 16.6v1.6M1.8 10h1.6M16.6 10h1.6M4.2 4.2l1.1 1.1M14.7 14.7l1.1 1.1M15.8 4.2l-1.1 1.1M5.3 14.7l-1.1 1.1" strokeLinecap="round" />
-      </svg>
-      <svg
-        className="theme-toggle-icon theme-toggle-icon-moon"
-        viewBox="0 0 20 20"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        aria-hidden="true"
-      >
-        <path d="M16.4 12.5A6.8 6.8 0 0 1 7.5 3.6a6.8 6.8 0 1 0 8.9 8.9Z" strokeLinejoin="round" />
-      </svg>
+      {theme === 'light' ? (
+        <svg
+          className="theme-toggle-icon theme-toggle-icon-moon"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          aria-hidden="true"
+        >
+          <path d="M16.4 12.5A6.8 6.8 0 0 1 7.5 3.6a6.8 6.8 0 1 0 8.9 8.9Z" strokeLinejoin="round" />
+        </svg>
+      ) : (
+        <svg
+          className="theme-toggle-icon theme-toggle-icon-sun"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          aria-hidden="true"
+        >
+          <circle cx="10" cy="10" r="3.1" />
+          <path d="M10 1.8v1.6M10 16.6v1.6M1.8 10h1.6M16.6 10h1.6M4.2 4.2l1.1 1.1M14.7 14.7l1.1 1.1M15.8 4.2l-1.1 1.1M5.3 14.7l-1.1 1.1" strokeLinecap="round" />
+        </svg>
+      )}
     </button>
   );
 }
