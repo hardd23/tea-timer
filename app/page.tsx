@@ -53,9 +53,9 @@ export default function Home() {
             target="_blank"
             rel="noopener noreferrer"
             className="footer-support"
-            aria-label="Support via Tribute"
+            aria-label="Угостить автора чаем"
           >
-            Support via Tribute
+            Угостить автора чаем
           </a>
         </footer>
       </div>
