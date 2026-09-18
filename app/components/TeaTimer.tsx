@@ -7,6 +7,7 @@ import React, {
   useState,
 } from 'react';
 import DrumPicker from './DrumPicker';
+import { useTeaSession } from './TeaSessionContext';
 
 interface CompletedTimer {
   id: string;
@@ -44,6 +45,7 @@ const getPourVerb = (count: number) =>
   getPourWord(count) === 'пролив' ? 'Сделан' : 'Сделано';
 
 const TeaTimer: React.FC = () => {
+  const { setIsTeaCoolingTooLong } = useTeaSession();
   const [activeTimers, setActiveTimers] = useState<TimerInstance[]>([]);
   const [completedTimers, setCompletedTimers] = useState<CompletedTimer[]>([]);
   const [{ minutes, seconds }, setTimerSetting] = useState({
@@ -68,6 +70,15 @@ const TeaTimer: React.FC = () => {
   const progressEndAt = currentDisplayTimer?.endAt;
   const progressTimerLabel = currentDisplayTimer?.label;
   const progressDurationMs = (currentDisplayTimer?.initialTime ?? 0) * 1000;
+  const isTeaCoolingTooLong = Boolean(
+    currentDisplayTimer?.isRunning &&
+      currentDisplayTimer.timerPhase === 'cooling' &&
+      currentDisplayTimer.timeLeft < -180,
+  );
+
+  useEffect(() => {
+    setIsTeaCoolingTooLong(isTeaCoolingTooLong);
+  }, [isTeaCoolingTooLong, setIsTeaCoolingTooLong]);
 
   const setProgressBorderProgress = useCallback((progress: number, color: string) => {
     const canvas = progressCanvasRef.current;

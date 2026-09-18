@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import teaQuotesData from '../data/tea-quotes-popup-300.ru.json';
+import { useTeaSession } from './TeaSessionContext';
 
 interface TeaQuote {
   id: string;
@@ -12,7 +13,9 @@ interface TeaQuote {
 interface TeaQuotePopupProps {
   quote: TeaQuote;
   isOpen: boolean;
+  isTeaCoolingTooLong: boolean;
   onClose: () => void;
+  onNext: () => void;
 }
 
 const TEA_QUOTES: TeaQuote[] = teaQuotesData.quotes;
@@ -32,7 +35,13 @@ const createShuffledOrder = (length: number, previousIndex: number | null) => {
   return order;
 };
 
-function TeaQuotePopup({ quote, isOpen, onClose }: TeaQuotePopupProps) {
+function TeaQuotePopup({
+  quote,
+  isOpen,
+  isTeaCoolingTooLong,
+  onClose,
+  onNext,
+}: TeaQuotePopupProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -78,18 +87,28 @@ function TeaQuotePopup({ quote, isOpen, onClose }: TeaQuotePopupProps) {
           {quote.text}
         </blockquote>
         <p className="tea-wisdom-author">— {quote.author}</p>
+        {isTeaCoolingTooLong ? (
+          <p className="tea-wisdom-cooling-notice" aria-live="polite">
+            Ваш чай остывает...
+          </p>
+        ) : (
+          <button type="button" className="tea-wisdom-next" onClick={onNext}>
+            Ещё
+          </button>
+        )}
       </div>
     </dialog>
   );
 }
 
 export default function TeaWisdom() {
+  const { isTeaCoolingTooLong } = useTeaSession();
   const [isOpen, setIsOpen] = useState(false);
   const [quote, setQuote] = useState<TeaQuote>(TEA_QUOTES[0]);
   const remainingIndexesRef = useRef<number[]>([]);
   const lastIndexRef = useRef<number | null>(null);
 
-  const openWisdom = () => {
+  const selectNextQuote = () => {
     if (remainingIndexesRef.current.length === 0) {
       remainingIndexesRef.current = createShuffledOrder(
         TEA_QUOTES.length,
@@ -102,6 +121,10 @@ export default function TeaWisdom() {
 
     lastIndexRef.current = nextIndex;
     setQuote(TEA_QUOTES[nextIndex]);
+  };
+
+  const openWisdom = () => {
+    selectNextQuote();
     setIsOpen(true);
   };
 
@@ -132,7 +155,9 @@ export default function TeaWisdom() {
       <TeaQuotePopup
         quote={quote}
         isOpen={isOpen}
+        isTeaCoolingTooLong={isTeaCoolingTooLong}
         onClose={() => setIsOpen(false)}
+        onNext={selectNextQuote}
       />
     </>
   );

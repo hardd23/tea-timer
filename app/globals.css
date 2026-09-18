@@ -140,7 +140,8 @@ button {
 }
 
 .header-action:focus-visible,
-.tea-wisdom-close:focus-visible {
+.tea-wisdom-close:focus-visible,
+.tea-wisdom-next:focus-visible {
   outline: 2px solid var(--color-accent-secondary);
   outline-offset: 3px;
 }
@@ -247,6 +248,38 @@ button {
   margin: 24px 0 0;
   color: var(--color-text-secondary);
   font-size: 0.9375rem;
+}
+
+.tea-wisdom-next {
+  min-width: 112px;
+  min-height: 44px;
+  margin-top: 36px;
+  border: 1px solid var(--color-accent-primary);
+  border-radius: 999px;
+  padding: 10px 24px;
+  background: var(--color-accent-primary);
+  color: var(--color-accent-contrast);
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.tea-wisdom-next:hover {
+  border-color: var(--color-accent-primary-hover);
+  background: var(--color-accent-primary-hover);
+  transform: translateY(-1px);
+}
+
+.tea-wisdom-next:active {
+  transform: translateY(0);
+}
+
+.tea-wisdom-cooling-notice {
+  margin: 36px 0 0;
+  color: var(--color-accent-secondary);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
 }
 
 @keyframes wisdom-dialog-in {
@@ -604,6 +637,7 @@ button {
   .header-action,
   .theme-toggle-icon,
   .tea-wisdom-close,
+  .tea-wisdom-next,
   .tea-wisdom-dialog[open],
   .brew-counter-value {
     animation: none;
