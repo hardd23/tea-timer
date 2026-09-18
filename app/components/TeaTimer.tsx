@@ -58,6 +58,7 @@ const TeaTimer: React.FC = () => {
   const progressTimerPhase = currentDisplayTimer?.timerPhase;
   const progressTimerIsRunning = currentDisplayTimer?.isRunning;
   const progressEndAt = currentDisplayTimer?.endAt;
+  const progressTimerLabel = currentDisplayTimer?.label;
   const progressDurationMs = (currentDisplayTimer?.initialTime ?? 0) * 1000;
 
   const setProgressBorderProgress = useCallback((progress: number, color: string) => {
@@ -159,10 +160,13 @@ const TeaTimer: React.FC = () => {
     });
   }, []);
 
-  const startCooling = useCallback((timerId: string, overtimeSeconds: number) => {
+  const startCooling = useCallback((timer: CompletedTimer, overtimeSeconds: number) => {
+    const { id: timerId } = timer;
+
     if (coolingStartedRef.current.has(timerId)) return;
 
     coolingStartedRef.current.add(timerId);
+    recordCompletedTimer(timer);
     setProgressBorderProgress(0, COOLING_PROGRESS_COLOR);
 
     setActiveTimers((prevTimers) =>
@@ -179,11 +183,12 @@ const TeaTimer: React.FC = () => {
     );
 
     void new Audio('/notification.mp3').play().catch(() => undefined);
-  }, [setProgressBorderProgress]);
+  }, [recordCompletedTimer, setProgressBorderProgress]);
 
   const syncTimerState = useCallback(() => {
     if (
       !progressTimerId ||
+      !progressTimerLabel ||
       !progressTimerIsRunning ||
       progressEndAt === undefined ||
       progressDurationMs <= 0
@@ -222,7 +227,10 @@ const TeaTimer: React.FC = () => {
 
     if (remainingMs <= 0) {
       const overtimeSeconds = Math.floor(Math.max(0, -remainingMs) / 1000);
-      startCooling(progressTimerId, overtimeSeconds);
+      startCooling(
+        { id: progressTimerId, label: progressTimerLabel },
+        overtimeSeconds,
+      );
       return;
     }
 
@@ -245,6 +253,7 @@ const TeaTimer: React.FC = () => {
     progressEndAt,
     progressTimerId,
     progressTimerIsRunning,
+    progressTimerLabel,
     progressTimerPhase,
     setProgressBorderProgress,
     startCooling,
@@ -277,6 +286,7 @@ const TeaTimer: React.FC = () => {
 
     if (
       !progressTimerId ||
+      !progressTimerLabel ||
       (progressTimerPhase !== 'brewing' && progressTimerPhase !== 'cooling') ||
       !progressTimerIsRunning ||
       progressEndAt === undefined ||
@@ -315,7 +325,10 @@ const TeaTimer: React.FC = () => {
         const overtimeSeconds = Math.floor(
           Math.max(0, Date.now() - progressEndAt) / 1000,
         );
-        startCooling(progressTimerId, overtimeSeconds);
+        startCooling(
+          { id: progressTimerId, label: progressTimerLabel },
+          overtimeSeconds,
+        );
       }
     };
 
@@ -332,6 +345,7 @@ const TeaTimer: React.FC = () => {
     progressEndAt,
     progressTimerId,
     progressTimerIsRunning,
+    progressTimerLabel,
     progressTimerPhase,
     setProgressBorderProgress,
     startCooling,
@@ -367,10 +381,6 @@ const TeaTimer: React.FC = () => {
 
     if (totalSeconds <= 0) return;
 
-    activeTimers
-      .filter((timer) => timer.timerPhase === 'cooling')
-      .forEach(recordCompletedTimer);
-
     setProgressBorderProgress(1, BREWING_PROGRESS_COLOR);
 
     const newTimer: TimerInstance = {
@@ -404,10 +414,6 @@ const TeaTimer: React.FC = () => {
   };
 
   const handleStopTimer = (timer: TimerInstance) => {
-    if (timer.timerPhase === 'cooling') {
-      recordCompletedTimer(timer);
-    }
-
     coolingStartedRef.current.add(timer.id);
     if (progressFrameRef.current !== null) {
       cancelAnimationFrame(progressFrameRef.current);
