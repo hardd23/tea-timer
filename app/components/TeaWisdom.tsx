@@ -1,24 +1,23 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import teaQuotesData from '../data/tea-quotes-popup.ru.json';
 
-interface TeaSaying {
+interface TeaQuote {
+  id: string;
   text: string;
-  author?: string;
+  author: string;
 }
 
-// Add the supplied sayings here. The queue below shows each one once per cycle.
-const TEA_SAYINGS: TeaSaying[] = [];
+interface TeaQuotePopupProps {
+  quote: TeaQuote;
+  isOpen: boolean;
+  onClose: () => void;
+}
 
-const PLACEHOLDER_SAYING: TeaSaying = {
-  text: 'Здесь появится чайное высказывание.',
-};
+const TEA_QUOTES: TeaQuote[] = teaQuotesData.quotes;
 
-const EXHAUSTED_SAYING: TeaSaying = {
-  text: 'Все чайные высказывания этого чаепития уже показаны.',
-};
-
-const createShuffledOrder = (length: number) => {
+const createShuffledOrder = (length: number, previousIndex: number | null) => {
   const order = Array.from({ length }, (_, index) => index);
 
   for (let index = order.length - 1; index > 0; index -= 1) {
@@ -26,14 +25,15 @@ const createShuffledOrder = (length: number) => {
     [order[index], order[randomIndex]] = [order[randomIndex], order[index]];
   }
 
+  if (length > 1 && order[0] === previousIndex) {
+    [order[0], order[1]] = [order[1], order[0]];
+  }
+
   return order;
 };
 
-export default function TeaWisdom() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [saying, setSaying] = useState<TeaSaying>(PLACEHOLDER_SAYING);
+function TeaQuotePopup({ quote, isOpen, onClose }: TeaQuotePopupProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const remainingIndexesRef = useRef<number[] | null>(null);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -46,25 +46,62 @@ export default function TeaWisdom() {
     }
   }, [isOpen]);
 
-  const openWisdom = () => {
-    if (TEA_SAYINGS.length === 0) {
-      setSaying(PLACEHOLDER_SAYING);
-      setIsOpen(true);
-      return;
-    }
+  return (
+    <dialog
+      id="tea-wisdom-dialog"
+      ref={dialogRef}
+      className="tea-wisdom-dialog"
+      aria-labelledby="tea-wisdom-title"
+      onClose={onClose}
+    >
+      <button
+        type="button"
+        className="tea-wisdom-close"
+        onClick={() => dialogRef.current?.close()}
+        aria-label="Закрыть чайное высказывание"
+        autoFocus
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          aria-hidden="true"
+        >
+          <path d="M5 5l14 14M19 5 5 19" strokeLinecap="round" />
+        </svg>
+      </button>
 
-    if (remainingIndexesRef.current === null) {
-      remainingIndexesRef.current = createShuffledOrder(TEA_SAYINGS.length);
+      <div className="tea-wisdom-content">
+        <p className="tea-wisdom-mark" aria-hidden="true">茶</p>
+        <blockquote id="tea-wisdom-title" className="tea-wisdom-quote">
+          {quote.text}
+        </blockquote>
+        <p className="tea-wisdom-author">— {quote.author}</p>
+      </div>
+    </dialog>
+  );
+}
+
+export default function TeaWisdom() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [quote, setQuote] = useState<TeaQuote>(TEA_QUOTES[0]);
+  const remainingIndexesRef = useRef<number[]>([]);
+  const lastIndexRef = useRef<number | null>(null);
+
+  const openWisdom = () => {
+    if (remainingIndexesRef.current.length === 0) {
+      remainingIndexesRef.current = createShuffledOrder(
+        TEA_QUOTES.length,
+        lastIndexRef.current,
+      );
     }
 
     const nextIndex = remainingIndexesRef.current.shift();
-    if (nextIndex === undefined) {
-      setSaying(EXHAUSTED_SAYING);
-      setIsOpen(true);
-      return;
-    }
+    if (nextIndex === undefined) return;
 
-    setSaying(TEA_SAYINGS[nextIndex]);
+    lastIndexRef.current = nextIndex;
+    setQuote(TEA_QUOTES[nextIndex]);
     setIsOpen(true);
   };
 
@@ -92,41 +129,11 @@ export default function TeaWisdom() {
         </svg>
       </button>
 
-      <dialog
-        id="tea-wisdom-dialog"
-        ref={dialogRef}
-        className="tea-wisdom-dialog"
-        aria-labelledby="tea-wisdom-title"
+      <TeaQuotePopup
+        quote={quote}
+        isOpen={isOpen}
         onClose={() => setIsOpen(false)}
-      >
-        <button
-          type="button"
-          className="tea-wisdom-close"
-          onClick={() => dialogRef.current?.close()}
-          aria-label="Закрыть чайное высказывание"
-          autoFocus
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            aria-hidden="true"
-          >
-            <path d="M5 5l14 14M19 5 5 19" strokeLinecap="round" />
-          </svg>
-        </button>
-
-        <div className="tea-wisdom-content">
-          <p className="tea-wisdom-mark" aria-hidden="true">茶</p>
-          <blockquote id="tea-wisdom-title" className="tea-wisdom-quote">
-            {saying.text}
-          </blockquote>
-          {saying.author ? (
-            <p className="tea-wisdom-author">— {saying.author}</p>
-          ) : null}
-        </div>
-      </dialog>
+      />
     </>
   );
 }
