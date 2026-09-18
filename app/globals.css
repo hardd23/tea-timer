@@ -14,14 +14,10 @@
   --color-danger: #aa4545;
   --color-brand: #5f6b61;
   --color-separator: #78827a;
-  --color-hover-soft: rgb(38 50 41 / 6%);
-  --color-active-soft: rgb(38 50 41 / 10%);
   --color-panel-soft: rgb(235 231 220 / 78%);
   --color-border-soft: rgb(210 210 197 / 82%);
-  --color-row-border: rgb(190 195 183 / 72%);
   --color-footer: #626d64;
   --color-footer-hover: #59645b;
-  --color-danger-soft: rgb(184 79 79 / 9%);
   --color-selection: rgb(57 123 89 / 20%);
   --color-drum-shade: rgb(38 50 41 / 10%);
   --shadow-toggle: 0 1px 3px rgb(50 57 51 / 18%);
@@ -41,14 +37,10 @@
   --color-danger: #e87575;
   --color-brand: #c0c8bd;
   --color-separator: #c2c8c0;
-  --color-hover-soft: rgb(255 255 255 / 4%);
-  --color-active-soft: rgb(255 255 255 / 7%);
   --color-panel-soft: rgb(29 31 29 / 72%);
   --color-border-soft: rgb(53 58 52 / 68%);
-  --color-row-border: rgb(64 73 61 / 72%);
   --color-footer: #747a72;
   --color-footer-hover: #a9b0a6;
-  --color-danger-soft: rgb(232 117 117 / 8%);
   --color-selection: rgb(136 217 130 / 24%);
   --color-drum-shade: rgb(0 0 0 / 22%);
   --shadow-toggle: 0 1px 4px rgb(0 0 0 / 38%);
@@ -180,11 +172,7 @@ button {
 
 .drum-picker:focus-visible,
 .control-button:focus-visible,
-.accordion-trigger:focus-visible,
-.delete-button:focus-visible,
-.scroll-arrow:focus-visible,
-.app-footer a:focus-visible,
-.history-scroll:focus-visible {
+.app-footer a:focus-visible {
   outline: 2px solid var(--color-accent-secondary);
   outline-offset: 2px;
 }
@@ -426,143 +414,33 @@ button {
   letter-spacing: 0.01em;
 }
 
-.completed-section {
-  margin-top: clamp(10px, 2.1vh, 17px);
-}
-
 .functional-block {
   width: auto;
   margin-inline: clamp(12px, 4vw, 16px);
 }
 
-.accordion-trigger {
+.brew-counter {
   display: flex;
-  width: 100%;
-  min-height: 46px;
+  min-height: 78px;
   align-items: center;
-  gap: 10px;
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
+  justify-content: center;
+  gap: clamp(6px, 2vw, 10px);
+  margin-top: clamp(12px, 2.4vh, 20px);
   color: var(--color-brand);
   font-size: 0.9375rem;
   font-weight: 500;
-  text-align: left;
-  transition: color 160ms ease, border-color 160ms ease;
-}
-
-.accordion-trigger:hover {
-  border-color: var(--color-text-secondary);
-  color: var(--color-text-primary);
-}
-
-.history-panel {
-  display: flex;
-  width: 100%;
-  gap: 6px;
-  padding-top: 6px;
-}
-
-.history-scroll {
-  overscroll-behavior: contain;
-  scroll-behavior: smooth;
-  scrollbar-width: none;
-  scroll-snap-type: y mandatory;
-  touch-action: pan-y;
-}
-
-.history-scroll::-webkit-scrollbar {
-  display: none;
-}
-
-.history-row {
-  display: flex;
-  height: 56px;
-  min-width: 0;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--color-row-border);
-  color: var(--color-text-secondary);
-  scroll-snap-align: start;
-}
-
-.history-row:last-child {
-  border-bottom-color: transparent;
-}
-
-.history-time {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--color-text-primary);
-  font-size: 1.125rem;
-  font-variant-numeric: tabular-nums;
-  font-weight: 560;
-  text-overflow: ellipsis;
+  line-height: 1;
   white-space: nowrap;
 }
 
-.delete-button {
-  display: inline-flex;
-  width: 36px;
-  height: 36px;
-  flex: 0 0 36px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  color: var(--color-text-secondary);
-  transition: color 160ms ease, background-color 160ms ease;
-}
-
-.delete-button:hover {
-  background: var(--color-danger-soft);
-  color: var(--color-danger);
-}
-
-.history-scroll-controls {
-  display: flex;
-  width: 36px;
-  flex: 0 0 36px;
-  flex-direction: column;
-  align-items: center;
-}
-
-.scroll-arrow {
-  display: inline-flex;
-  width: 36px;
-  height: 36px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  color: var(--color-text-secondary);
-  font-size: 0.625rem;
-  transition: color 160ms ease, background-color 160ms ease, opacity 160ms ease;
-}
-
-.scroll-arrow:hover:not(:disabled) {
-  background: var(--color-hover-soft);
-  color: var(--color-text-primary);
-}
-
-.scroll-arrow:disabled {
-  cursor: not-allowed;
-  opacity: 0.25;
-}
-
-.scroll-track {
-  position: relative;
-  width: 1px;
-  flex: 1;
-  min-height: 24px;
-  background: var(--color-border);
-}
-
-.scroll-thumb {
-  position: absolute;
-  left: -1px;
-  width: 3px;
-  height: 28%;
-  border-radius: 999px;
-  background: var(--color-accent-secondary);
-  transition: top 120ms linear;
+.brew-counter-value {
+  min-width: 1ch;
+  color: var(--color-accent-secondary);
+  font-variant-numeric: tabular-nums;
+  font-weight: 520;
+  line-height: 1;
+  text-align: center;
+  transition: font-size 220ms ease;
 }
 
 .app-footer {
@@ -621,17 +499,14 @@ button {
     scroll-behavior: auto !important;
   }
 
-  .scroll-thumb {
-    transition: none;
-  }
-
   .drum-picker-outgoing,
   .drum-picker-incoming {
     animation: none;
   }
 
   .theme-toggle,
-  .theme-toggle-icon {
+  .theme-toggle-icon,
+  .brew-counter-value {
     transition: none;
   }
 }

@@ -25,10 +25,20 @@ interface TimerInstance {
   label: string;
 }
 
-const HISTORY_ROW_HEIGHT = 56;
 const COOLING_DURATION_MS = 3 * 60 * 1000;
 const BREWING_PROGRESS_COLOR = '#88d982';
 const COOLING_PROGRESS_COLOR = '#72b7ff';
+
+const getPourWord = (count: number) => {
+  const lastTwoDigits = count % 100;
+
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) return 'проливов';
+
+  const lastDigit = count % 10;
+  if (lastDigit === 1) return 'пролив';
+  if (lastDigit >= 2 && lastDigit <= 4) return 'пролива';
+  return 'проливов';
+};
 
 const TeaTimer: React.FC = () => {
   const [activeTimers, setActiveTimers] = useState<TimerInstance[]>([]);
@@ -37,12 +47,7 @@ const TeaTimer: React.FC = () => {
     minutes: 0,
     seconds: 0,
   });
-  const [isAccordionOpen, setIsAccordionOpen] = useState(false);
   const [currentDisplayTimerId, setCurrentDisplayTimerId] = useState<string | null>(null);
-  const [canScrollUp, setCanScrollUp] = useState(false);
-  const [canScrollDown, setCanScrollDown] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const historyListRef = useRef<HTMLDivElement>(null);
   const progressCanvasRef = useRef<HTMLCanvasElement>(null);
   const progressValueRef = useRef(0);
   const progressColorRef = useRef(BREWING_PROGRESS_COLOR);
@@ -423,41 +428,8 @@ const TeaTimer: React.FC = () => {
     handleResetTimer(timer.id);
   };
 
-  const handleDeleteCompleted = (id: string) => {
-    setCompletedTimers((prevCompleted) =>
-      prevCompleted.filter((timer) => timer.id !== id),
-    );
-  };
-
-  const updateScrollState = useCallback(() => {
-    const list = historyListRef.current;
-
-    if (!list) {
-      setCanScrollUp(false);
-      setCanScrollDown(false);
-      setScrollProgress(0);
-      return;
-    }
-
-    const maxScroll = Math.max(0, list.scrollHeight - list.clientHeight);
-    setCanScrollUp(list.scrollTop > 1);
-    setCanScrollDown(list.scrollTop < maxScroll - 1);
-    setScrollProgress(maxScroll > 0 ? list.scrollTop / maxScroll : 0);
-  }, []);
-
-  useEffect(() => {
-    const frame = requestAnimationFrame(updateScrollState);
-    return () => cancelAnimationFrame(frame);
-  }, [completedTimers.length, isAccordionOpen, updateScrollState]);
-
-  const scrollHistory = (direction: -1 | 1) => {
-    historyListRef.current?.scrollBy({
-      top: direction * HISTORY_ROW_HEIGHT,
-    });
-  };
-
-  const showScrollControls = completedTimers.length > 3;
-  const historyHeight = Math.min(completedTimers.length, 3) * HISTORY_ROW_HEIGHT;
+  const completedCount = completedTimers.length;
+  const completedCountFontSize = 42 + Math.log2(completedCount + 1) * 8;
 
   return (
     <section className="timer-stack flex w-full flex-col" aria-label="Tea timer controls">
@@ -513,95 +485,20 @@ const TeaTimer: React.FC = () => {
         </output>
       </div>
 
-      <div className="functional-block completed-section w-full">
-        <button
-          type="button"
-          onClick={() => setIsAccordionOpen((isOpen) => !isOpen)}
-          className="accordion-trigger"
-          aria-expanded={isAccordionOpen}
-          aria-controls="completed-timers-panel"
+      <p
+        className="functional-block brew-counter"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <span>Сделано</span>
+        <strong
+          className="brew-counter-value"
+          style={{ fontSize: `${completedCountFontSize}px` }}
         >
-          <svg
-            viewBox="0 0 20 20"
-            className={`h-4 w-4 shrink-0 transition-transform duration-200 motion-reduce:transition-none ${
-              isAccordionOpen ? 'rotate-90' : ''
-            }`}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            aria-hidden="true"
-          >
-            <path d="m7 4 6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span>Completed Timers — {completedTimers.length}</span>
-        </button>
-
-        {isAccordionOpen && completedTimers.length > 0 && (
-          <div id="completed-timers-panel" className="history-panel">
-            <div
-              ref={historyListRef}
-              className="history-scroll min-w-0 flex-1 overflow-y-auto"
-              style={{ height: historyHeight }}
-              onScroll={updateScrollState}
-              tabIndex={0}
-              role="region"
-              aria-label="Completed timers history"
-            >
-              {completedTimers.map((timer) => (
-                <div key={timer.id} className="history-row">
-                  <span className="history-time">{timer.label}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteCompleted(timer.id)}
-                    className="delete-button"
-                    aria-label={`Delete completed timer ${timer.label}`}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="h-[18px] w-[18px]"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.7"
-                      aria-hidden="true"
-                    >
-                      <path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {showScrollControls && (
-              <div className="history-scroll-controls" aria-label="History scroll controls">
-                <button
-                  type="button"
-                  onClick={() => scrollHistory(-1)}
-                  className="scroll-arrow"
-                  disabled={!canScrollUp}
-                  aria-label="Scroll completed timers up"
-                >
-                  <span aria-hidden="true">▲</span>
-                </button>
-                <div className="scroll-track" aria-hidden="true">
-                  <span
-                    className="scroll-thumb"
-                    style={{ top: `${scrollProgress * 72}%` }}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => scrollHistory(1)}
-                  className="scroll-arrow"
-                  disabled={!canScrollDown}
-                  aria-label="Scroll completed timers down"
-                >
-                  <span aria-hidden="true">▼</span>
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+          {completedCount}
+        </strong>
+        <span>{getPourWord(completedCount)}.</span>
+      </p>
     </section>
   );
 };
