@@ -1,4 +1,5 @@
 import TeaTimer from './components/TeaTimer';
+import ThemeToggle from './components/ThemeToggle';
 
 const footerLinks = [
   { label: 'Telegram', href: 'https://t.me/hardd_lab' },
@@ -9,10 +10,13 @@ export default function Home() {
   return (
     <main className="min-h-dvh overflow-x-hidden bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
       <div className="page-frame mx-auto flex min-h-dvh w-full max-w-[420px] flex-col px-4 sm:px-6">
-        <header className="brand-header flex items-center justify-center gap-4" aria-label="Tea Timer">
-          <span className="brand-word">tea</span>
-          <h1 className="brand-kanji">茶</h1>
-          <span className="brand-word">timer</span>
+        <header className="brand-header" aria-label="Tea Timer">
+          <div className="flex items-center justify-center gap-4">
+            <span className="brand-word">tea</span>
+            <h1 className="brand-kanji">茶</h1>
+            <span className="brand-word">timer</span>
+          </div>
+          <ThemeToggle />
         </header>
 
         <TeaTimer />
