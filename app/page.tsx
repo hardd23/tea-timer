@@ -1,4 +1,5 @@
 import TeaTimer from './components/TeaTimer';
+import TeaWisdom from './components/TeaWisdom';
 import ThemeToggle from './components/ThemeToggle';
 
 const footerLinks = [
@@ -16,6 +17,7 @@ export default function Home() {
             <h1 className="brand-kanji">茶</h1>
             <span className="brand-word">timer</span>
           </div>
+          <TeaWisdom />
           <ThemeToggle />
         </header>
 

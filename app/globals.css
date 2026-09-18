@@ -113,10 +113,9 @@ button {
   text-align: left;
 }
 
-.theme-toggle {
+.header-action {
   position: absolute;
   top: calc(clamp(14px, 3.5vh, 28px) + 8px);
-  right: 0;
   display: grid;
   width: 36px;
   height: 36px;
@@ -130,19 +129,28 @@ button {
   transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
 }
 
-.theme-toggle:hover {
+.header-action:hover {
   border-color: var(--color-accent-secondary);
   color: var(--color-text-primary);
   transform: translateY(-1px);
 }
 
-.theme-toggle:active {
+.header-action:active {
   transform: translateY(0);
 }
 
-.theme-toggle:focus-visible {
+.header-action:focus-visible,
+.tea-wisdom-close:focus-visible {
   outline: 2px solid var(--color-accent-secondary);
   outline-offset: 3px;
+}
+
+.theme-toggle {
+  right: 0;
+}
+
+.tea-wisdom-trigger {
+  left: 0;
 }
 
 .theme-toggle-icon {
@@ -156,6 +164,95 @@ button {
 
 .theme-toggle-icon-moon {
   color: var(--color-accent-secondary);
+}
+
+.tea-wisdom-trigger-icon {
+  width: 17px;
+  height: 17px;
+  color: var(--color-accent-secondary);
+}
+
+.tea-wisdom-dialog {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  border: 0;
+  margin: 0;
+  padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.tea-wisdom-dialog[open] {
+  display: grid;
+  place-items: center;
+  animation: wisdom-dialog-in 180ms ease-out;
+}
+
+.tea-wisdom-dialog::backdrop {
+  background: var(--color-bg-primary);
+}
+
+.tea-wisdom-close {
+  position: fixed;
+  top: max(18px, env(safe-area-inset-top));
+  right: max(18px, env(safe-area-inset-right));
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+
+.tea-wisdom-close:hover {
+  border-color: var(--color-accent-secondary);
+  background: var(--color-bg-elevated);
+  transform: rotate(4deg);
+}
+
+.tea-wisdom-close svg {
+  width: 28px;
+  height: 28px;
+}
+
+.tea-wisdom-content {
+  width: min(100%, 680px);
+  text-align: center;
+}
+
+.tea-wisdom-mark {
+  margin: 0 0 24px;
+  color: var(--color-accent-secondary);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(3rem, 14vw, 5rem);
+  line-height: 1;
+}
+
+.tea-wisdom-quote {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.75rem, 7vw, 3.25rem);
+  font-weight: 400;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.tea-wisdom-author {
+  margin: 24px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+}
+
+@keyframes wisdom-dialog-in {
+  from {
+    opacity: 0;
+  }
 }
 
 .brand-kanji {
@@ -504,9 +601,12 @@ button {
     animation: none;
   }
 
-  .theme-toggle,
+  .header-action,
   .theme-toggle-icon,
+  .tea-wisdom-close,
+  .tea-wisdom-dialog[open],
   .brew-counter-value {
+    animation: none;
     transition: none;
   }
 }

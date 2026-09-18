@@ -40,6 +40,9 @@ const getPourWord = (count: number) => {
   return 'проливов';
 };
 
+const getPourVerb = (count: number) =>
+  getPourWord(count) === 'пролив' ? 'Сделан' : 'Сделано';
+
 const TeaTimer: React.FC = () => {
   const [activeTimers, setActiveTimers] = useState<TimerInstance[]>([]);
   const [completedTimers, setCompletedTimers] = useState<CompletedTimer[]>([]);
@@ -429,7 +432,8 @@ const TeaTimer: React.FC = () => {
   };
 
   const completedCount = completedTimers.length;
-  const completedCountFontSize = 42 + Math.log2(completedCount + 1) * 8;
+  const sizeGrowthCount = Math.min(completedCount, 10);
+  const completedCountFontSize = 42 + Math.log2(sizeGrowthCount + 1) * 8;
 
   return (
     <section className="timer-stack flex w-full flex-col" aria-label="Tea timer controls">
@@ -490,7 +494,7 @@ const TeaTimer: React.FC = () => {
         aria-live="polite"
         aria-atomic="true"
       >
-        <span>Сделано</span>
+        <span>{getPourVerb(completedCount)}</span>
         <strong
           className="brew-counter-value"
           style={{ fontSize: `${completedCountFontSize}px` }}
