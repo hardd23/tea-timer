@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import teaQuotesData from '../data/tea-quotes-popup.ru.json';
+import teaQuotesData from '../data/tea-quotes-popup-300.ru.json';
 
 interface TeaQuote {
   id: string;
