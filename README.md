@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://tea-timer.vercel.app/"><strong>Open the live app</strong></a>
+  <a href="https://my-tea-timer.vercel.app/"><strong>Open the live app</strong></a>
 </p>
 
 A compact, mobile-first timer for tea brewing. Set the duration with tactile drum controls, hear when steeping is complete, and track how long the tea has been cooling.
@@ -101,7 +101,7 @@ public/
 - HARDD LAB: https://hardd-lab.vercel.app/
 - Telegram: https://t.me/hardd_lab
 - GitHub: https://github.com/hardd23/tea-timer
-- Demo: https://tea-timer.vercel.app/
+- Demo: https://my-tea-timer.vercel.app/
 - Tribute: https://web.tribute.tg/d/OyG
 
 ## Verification

@@ -4,7 +4,7 @@
   "private": true,
   "description": "A minimal mobile-first tea brewing timer with cooling tracking and tea wisdom.",
   "license": "MIT",
-  "homepage": "https://tea-timer.vercel.app/",
+  "homepage": "https://my-tea-timer.vercel.app/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hardd23/tea-timer.git"
