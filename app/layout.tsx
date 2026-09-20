@@ -3,10 +3,18 @@ import "./globals.css";
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://tea-timer.vercel.app"),
   title: "Tea Timer",
   description: "A minimal mobile-first tea brewing timer with cooling tracking and tea wisdom.",
   authors: [{ name: "HARDD lab", url: "https://hardd-lab.vercel.app/" }],
   creator: "HARDD lab",
+  openGraph: {
+    title: "Tea Timer",
+    description: "A minimal mobile-first tea brewing timer with cooling tracking and tea wisdom.",
+    url: "/",
+    siteName: "Tea Timer",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {

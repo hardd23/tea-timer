@@ -11,4 +11,5 @@ https://hardd-lab.vercel.app/
 Telegram:
 https://t.me/hardd_lab
 
-Content and visual assets may have separate rights from the MIT licensed source code.
+Source code is licensed under MIT License.
+Branding, visual assets and separately created content may have separate rights.
