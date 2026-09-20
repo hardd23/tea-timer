@@ -100,7 +100,8 @@ public/
 
 - HARDD LAB: https://hardd-lab.vercel.app/
 - Telegram: https://t.me/hardd_lab
-- GitHub: https://github.com/hardd23
+- GitHub: https://github.com/hardd23/tea-timer-trae-
+- Demo: https://tea-timer-trae.vercel.app/
 - Tribute: https://web.tribute.tg/d/OyG
 
 ## Verification
@@ -117,4 +118,6 @@ The production build is deployed on Vercel and includes Vercel Speed Insights.
 
 ## License
 
-[MIT](./LICENSE)
+The [MIT License](./LICENSE) applies to the source code.
+
+Branding, logos, visual assets, and separately created content may have separate rights and attribution requirements. See [NOTICE.md](./NOTICE.md) for project credits and content attribution.

@@ -4,7 +4,9 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const metadata: Metadata = {
   title: "Tea Timer",
-  description: "Таймер для заваривания чая",
+  description: "A minimal mobile-first tea brewing timer with cooling tracking and tea wisdom.",
+  authors: [{ name: "HARDD lab", url: "https://hardd-lab.vercel.app/" }],
+  creator: "HARDD lab",
 };
 
 export const viewport: Viewport = {
