@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tea Timer</string>
+    <string name="title_activity_main">Tea Timer</string>
+    <string name="package_name">lab.hardd.teatimer</string>
+    <string name="custom_url_scheme">lab.hardd.teatimer</string>
+</resources>
