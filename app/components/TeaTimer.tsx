@@ -53,7 +53,10 @@ const TeaTimer: React.FC = () => {
     seconds: 0,
   });
   const [currentDisplayTimerId, setCurrentDisplayTimerId] = useState<string | null>(null);
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const progressCanvasRef = useRef<HTMLCanvasElement>(null);
+  const resetDialogRef = useRef<HTMLDialogElement>(null);
+  const resetInProgressRef = useRef(false);
   const progressValueRef = useRef(0);
   const progressColorRef = useRef(BREWING_PROGRESS_COLOR);
   const progressFrameRef = useRef<number | null>(null);
@@ -79,6 +82,17 @@ const TeaTimer: React.FC = () => {
   useEffect(() => {
     setIsTeaCoolingTooLong(isTeaCoolingTooLong);
   }, [isTeaCoolingTooLong, setIsTeaCoolingTooLong]);
+
+  useEffect(() => {
+    const dialog = resetDialogRef.current;
+    if (!dialog) return;
+
+    if (isResetDialogOpen && !dialog.open) {
+      dialog.showModal();
+    } else if (!isResetDialogOpen && dialog.open) {
+      dialog.close();
+    }
+  }, [isResetDialogOpen]);
 
   const setProgressBorderProgress = useCallback((progress: number, color: string) => {
     const canvas = progressCanvasRef.current;
@@ -442,6 +456,32 @@ const TeaTimer: React.FC = () => {
     handleResetTimer(timer.id);
   };
 
+  const openResetDialog = () => {
+    if (isResetDialogOpen || resetDialogRef.current?.open) return;
+
+    resetInProgressRef.current = false;
+    setIsResetDialogOpen(true);
+  };
+
+  const handleConfirmSessionReset = () => {
+    if (resetInProgressRef.current) return;
+
+    resetInProgressRef.current = true;
+
+    if (progressFrameRef.current !== null) {
+      cancelAnimationFrame(progressFrameRef.current);
+      progressFrameRef.current = null;
+    }
+
+    coolingStartedRef.current.clear();
+    setActiveTimers([]);
+    setCompletedTimers([]);
+    setCurrentDisplayTimerId(null);
+    setIsTeaCoolingTooLong(false);
+    setProgressBorderProgress(0, BREWING_PROGRESS_COLOR);
+    resetDialogRef.current?.close();
+  };
+
   const completedCount = completedTimers.length;
   const sizeGrowthCount = Math.min(completedCount, 10);
   const completedCountFontSize = 42 + Math.log2(sizeGrowthCount + 1) * 8;
@@ -500,20 +540,73 @@ const TeaTimer: React.FC = () => {
         </output>
       </div>
 
-      <p
-        className="functional-block brew-counter"
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        <span>{getPourVerb(completedCount)}</span>
-        <strong
-          className="brew-counter-value"
-          style={{ fontSize: `${completedCountFontSize}px` }}
+      <div className="functional-block brew-counter-row">
+        <p className="brew-counter" aria-live="polite" aria-atomic="true">
+          <span>{getPourVerb(completedCount)}</span>
+          <strong
+            className="brew-counter-value"
+            style={{ fontSize: `${completedCountFontSize}px` }}
+          >
+            {completedCount}
+          </strong>
+          <span>{getPourWord(completedCount)}.</span>
+        </p>
+        <button
+          type="button"
+          className="session-reset-button"
+          onClick={openResetDialog}
+          aria-label="Начать новое чаепитие"
+          aria-haspopup="dialog"
+          aria-expanded={isResetDialogOpen}
+          aria-controls="session-reset-dialog"
+          title="Начать новое чаепитие"
         >
-          {completedCount}
-        </strong>
-        <span>{getPourWord(completedCount)}.</span>
-      </p>
+          <svg
+            className="session-reset-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            aria-hidden="true"
+          >
+            <path d="M3 12a9 9 0 1 0 3-6.7L3 8" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M3 3v5h5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </div>
+
+      <dialog
+        id="session-reset-dialog"
+        ref={resetDialogRef}
+        className="session-reset-dialog"
+        aria-labelledby="session-reset-title"
+        aria-describedby="session-reset-description"
+        onClose={() => setIsResetDialogOpen(false)}
+      >
+        <div className="session-reset-dialog-content">
+          <h2 id="session-reset-title">Начать новое чаепитие?</h2>
+          <p id="session-reset-description">
+            Счётчик проливов будет обнулён, а активный таймер остановлен
+          </p>
+          <div className="session-reset-dialog-actions">
+            <button
+              type="button"
+              className="session-reset-dialog-button session-reset-cancel"
+              onClick={() => resetDialogRef.current?.close()}
+              autoFocus
+            >
+              Отмена
+            </button>
+            <button
+              type="button"
+              className="session-reset-dialog-button session-reset-confirm"
+              onClick={handleConfirmSessionReset}
+            >
+              Сбросить
+            </button>
+          </div>
+        </div>
+      </dialog>
     </section>
   );
 };
