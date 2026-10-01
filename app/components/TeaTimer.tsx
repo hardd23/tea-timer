@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import DrumPicker from './DrumPicker';
+import TimeCarousel from './TimeCarousel';
 import { useTeaSession } from './TeaSessionContext';
 
 interface CompletedTimer {
@@ -48,10 +48,7 @@ const TeaTimer: React.FC = () => {
   const { setIsTeaCoolingTooLong } = useTeaSession();
   const [activeTimers, setActiveTimers] = useState<TimerInstance[]>([]);
   const [completedTimers, setCompletedTimers] = useState<CompletedTimer[]>([]);
-  const [{ minutes, seconds }, setTimerSetting] = useState({
-    minutes: 0,
-    seconds: 0,
-  });
+  const [durationSeconds, setDurationSeconds] = useState(10);
   const [currentDisplayTimerId, setCurrentDisplayTimerId] = useState<string | null>(null);
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const progressCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -395,22 +392,8 @@ const TeaTimer: React.FC = () => {
       .padStart(2, '0')}`;
   };
 
-  const handleMinuteChange = (nextMinutes: number) => {
-    setTimerSetting((prevSetting) => ({
-      ...prevSetting,
-      minutes: nextMinutes,
-    }));
-  };
-
-  const handleSecondChange = (nextSeconds: number) => {
-    setTimerSetting((prevSetting) => ({
-      ...prevSetting,
-      seconds: nextSeconds,
-    }));
-  };
-
   const handleStartTimer = () => {
-    const totalSeconds = minutes * 60 + seconds;
+    const totalSeconds = durationSeconds;
 
     if (totalSeconds <= 0) return;
 
@@ -423,7 +406,7 @@ const TeaTimer: React.FC = () => {
       timeLeft: totalSeconds,
       isRunning: true,
       timerPhase: 'brewing',
-      label: `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`,
+      label: formatTime(durationSeconds),
     };
 
     coolingStartedRef.current.delete(newTimer.id);
@@ -493,11 +476,7 @@ const TeaTimer: React.FC = () => {
           hasActiveCountdown ? 'scale-[0.96] opacity-55' : 'opacity-100'
         }`}
       >
-        <DrumPicker value={minutes} onChange={handleMinuteChange} label="Минуты" />
-        <span className="timer-input-separator" aria-hidden="true">
-          :
-        </span>
-        <DrumPicker value={seconds} onChange={handleSecondChange} label="Секунды" step={10} />
+        <TimeCarousel value={durationSeconds} onChange={setDurationSeconds} />
       </div>
 
       <div className="functional-block timer-actions grid w-full grid-cols-3 gap-3">
@@ -513,7 +492,7 @@ const TeaTimer: React.FC = () => {
           type="button"
           onClick={handleStartTimer}
           className="control-button control-button-primary col-span-2"
-          disabled={(minutes === 0 && seconds === 0) || isBrewingActive}
+          disabled={isBrewingActive}
         >
           Start
         </button>
@@ -612,3 +591,4 @@ const TeaTimer: React.FC = () => {
 };
 
 export default TeaTimer;
+

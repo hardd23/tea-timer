@@ -8,7 +8,7 @@
   <a href="https://my-tea-timer.vercel.app/"><strong>Open the live app</strong></a>
 </p>
 
-A compact, mobile-first timer for tea brewing. Set the duration with tactile drum controls, hear when steeping is complete, and track how long the tea has been cooling.
+A compact, mobile-first timer for tea brewing. Set the duration with a tactile horizontal carousel, hear when steeping is complete, and track how long the tea has been cooling.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.2.4-black?logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2.4-61dafb?logo=react)](https://react.dev/)
@@ -27,7 +27,7 @@ The interface is intentionally narrow and stable: the active timer keeps its pla
 
 ## Features
 
-- **Drum pickers** for minutes and 10-second increments, controlled by swipe, drag, mouse wheel, or keyboard.
+- **Time carousel** with adaptive increments: 10 seconds below one minute, 30 seconds through five minutes, one minute through 10 minutes, and five minutes after that.
 - **Two-phase progress** with a smooth brewing border, red negative-time display, and a three-minute cooling indicator.
 - **Brew counter** with correct Russian plural forms; a brew is counted as soon as steeping reaches zero.
 - **Tea wisdom dialog** with 315 shuffled quotes and a cooling reminder when tea has waited too long.
@@ -35,7 +35,7 @@ The interface is intentionally narrow and stable: the active timer keeps its pla
 
 ## Timer Lifecycle
 
-1. Choose a duration from `00:00` to `59:50`; `Start` remains disabled at zero.
+1. Choose a duration from `00:10` to `55:00`; the increment grows from 10 seconds to 30 seconds, then to one minute and five minutes.
 2. During brewing, the timer uses an absolute end timestamp so returning to the tab restores the correct time.
 3. At zero, the notification sounds, the brew counter increases, and cooling overtime begins.
 4. `Stop` removes the active timer; stopping before zero does not increase the brew counter.
@@ -80,7 +80,7 @@ npm start
 ```text
 app/
   components/
-    DrumPicker.tsx          # Touch, wheel, and keyboard duration picker
+    TimeCarousel.tsx        # Touch and keyboard duration carousel
     TeaSessionContext.tsx   # Shared cooling state
     TeaTimer.tsx            # Timer phases, progress, sound, and brew count
     TeaWisdom.tsx           # Shuffled quote dialog
@@ -121,3 +121,4 @@ The production build is deployed on Vercel and includes Vercel Speed Insights.
 The [MIT License](./LICENSE) applies to the source code.
 
 Branding, logos, visual assets, and separately created content may have separate rights and attribution requirements. See [NOTICE.md](./NOTICE.md) for project credits and content attribution.
+
