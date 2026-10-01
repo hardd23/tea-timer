@@ -591,4 +591,3 @@ const TeaTimer: React.FC = () => {
 };
 
 export default TeaTimer;
-

@@ -121,4 +121,3 @@ The production build is deployed on Vercel and includes Vercel Speed Insights.
 The [MIT License](./LICENSE) applies to the source code.
 
 Branding, logos, visual assets, and separately created content may have separate rights and attribution requirements. See [NOTICE.md](./NOTICE.md) for project credits and content attribution.
-

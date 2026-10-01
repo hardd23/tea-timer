@@ -295,4 +295,3 @@ export default function TimeCarousel({ value, onChange }: TimeCarouselProps) {
     </div>
   );
 }
-
