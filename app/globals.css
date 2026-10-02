@@ -302,7 +302,7 @@ button {
 
 .time-carousel:focus-visible,
 .control-button:focus-visible,
-.session-reset-dialog-button:focus-visible,
+.session-reset-popup-button:focus-visible,
 .app-footer a:focus-visible {
   outline: 2px solid var(--color-accent-secondary);
   outline-offset: 2px;
@@ -581,56 +581,60 @@ button {
   transform: rotate(-24deg);
 }
 
-.session-reset-dialog {
-  width: calc(100% - 32px);
-  max-width: 360px;
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  padding: 0;
-  background: var(--color-bg-elevated);
+.session-reset-popup {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  display: grid;
+  width: 100vw;
+  height: 100dvh;
+  place-items: center;
+  overflow: hidden;
+  border: 0;
+  padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+  background: var(--color-bg-primary);
   color: var(--color-text-primary);
-  box-shadow: 0 18px 50px rgb(0 0 0 / 24%);
+  animation: session-reset-popup-in 150ms ease-out;
 }
 
-.session-reset-dialog[open] {
-  animation: session-reset-dialog-in 160ms ease-out;
+.session-reset-popup::before {
+  display: none;
 }
 
-.session-reset-dialog::backdrop {
-  background: rgb(10 12 10 / 56%);
-  backdrop-filter: blur(2px);
+.session-reset-popup-content {
+  width: min(100%, 380px);
+  padding: 0;
+  text-align: center;
 }
 
-.session-reset-dialog-content {
-  padding: 24px;
-}
-
-.session-reset-dialog h2 {
+.session-reset-popup h2 {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 650;
-  line-height: 1.25;
+  font-size: clamp(1.75rem, 7vw, 2.5rem);
+  font-weight: 430;
+  line-height: 1.2;
   text-wrap: balance;
 }
 
-.session-reset-dialog p {
-  margin: 12px 0 0;
+.session-reset-popup p {
+  margin: 18px auto 0;
+  max-width: 320px;
   color: var(--color-text-secondary);
   font-size: 0.9375rem;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
-.session-reset-dialog-actions {
+.session-reset-popup-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin-top: 24px;
+  margin-top: 32px;
 }
 
-.session-reset-dialog-button {
-  min-height: 44px;
-  border-radius: 10px;
+.session-reset-popup-button {
+  min-height: 46px;
+  border-radius: 999px;
   cursor: pointer;
+  font-size: 0.9375rem;
   font-weight: 600;
   transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
 }
@@ -657,10 +661,9 @@ button {
   color: var(--color-accent-contrast);
 }
 
-@keyframes session-reset-dialog-in {
+@keyframes session-reset-popup-in {
   from {
     opacity: 0;
-    transform: translateY(6px) scale(0.98);
   }
 }
 
@@ -736,8 +739,8 @@ button {
   .tea-wisdom-next,
   .tea-wisdom-dialog[open],
   .session-reset-button,
-  .session-reset-dialog[open],
-  .session-reset-dialog-button,
+  .session-reset-popup,
+  .session-reset-popup-button,
   .brew-counter-value {
     animation: none;
     transition: none;

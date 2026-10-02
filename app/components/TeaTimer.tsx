@@ -50,9 +50,10 @@ const TeaTimer: React.FC = () => {
   const [completedTimers, setCompletedTimers] = useState<CompletedTimer[]>([]);
   const [durationSeconds, setDurationSeconds] = useState(10);
   const [currentDisplayTimerId, setCurrentDisplayTimerId] = useState<string | null>(null);
-  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [isResetPopupOpen, setIsResetPopupOpen] = useState(false);
   const progressCanvasRef = useRef<HTMLCanvasElement>(null);
-  const resetDialogRef = useRef<HTMLDialogElement>(null);
+  const resetButtonRef = useRef<HTMLButtonElement>(null);
+  const resetPopupRef = useRef<HTMLDivElement>(null);
   const resetInProgressRef = useRef(false);
   const progressValueRef = useRef(0);
   const progressColorRef = useRef(BREWING_PROGRESS_COLOR);
@@ -81,15 +82,33 @@ const TeaTimer: React.FC = () => {
   }, [isTeaCoolingTooLong, setIsTeaCoolingTooLong]);
 
   useEffect(() => {
-    const dialog = resetDialogRef.current;
-    if (!dialog) return;
+    if (!isResetPopupOpen) return;
 
-    if (isResetDialogOpen && !dialog.open) {
-      dialog.showModal();
-    } else if (!isResetDialogOpen && dialog.open) {
-      dialog.close();
-    }
-  }, [isResetDialogOpen]);
+    const closePopup = (restoreFocus = false) => {
+      setIsResetPopupOpen(false);
+      if (restoreFocus) resetButtonRef.current?.focus();
+    };
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (
+        !resetPopupRef.current?.contains(target) &&
+        !resetButtonRef.current?.contains(target)
+      ) {
+        closePopup();
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closePopup(true);
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isResetPopupOpen]);
 
   const setProgressBorderProgress = useCallback((progress: number, color: string) => {
     const canvas = progressCanvasRef.current;
@@ -439,11 +458,9 @@ const TeaTimer: React.FC = () => {
     handleResetTimer(timer.id);
   };
 
-  const openResetDialog = () => {
-    if (isResetDialogOpen || resetDialogRef.current?.open) return;
-
+  const openResetPopup = () => {
     resetInProgressRef.current = false;
-    setIsResetDialogOpen(true);
+    setIsResetPopupOpen(true);
   };
 
   const handleConfirmSessionReset = () => {
@@ -462,7 +479,7 @@ const TeaTimer: React.FC = () => {
     setCurrentDisplayTimerId(null);
     setIsTeaCoolingTooLong(false);
     setProgressBorderProgress(0, BREWING_PROGRESS_COLOR);
-    resetDialogRef.current?.close();
+    setIsResetPopupOpen(false);
   };
 
   const completedCount = completedTimers.length;
@@ -532,12 +549,13 @@ const TeaTimer: React.FC = () => {
         </p>
         <button
           type="button"
+          ref={resetButtonRef}
           className="session-reset-button"
-          onClick={openResetDialog}
+          onClick={openResetPopup}
           aria-label="Начать новое чаепитие"
           aria-haspopup="dialog"
-          aria-expanded={isResetDialogOpen}
-          aria-controls="session-reset-dialog"
+          aria-expanded={isResetPopupOpen}
+          aria-controls="session-reset-popup"
           title="Начать новое чаепитие"
         >
           <svg
@@ -554,38 +572,44 @@ const TeaTimer: React.FC = () => {
         </button>
       </div>
 
-      <dialog
-        id="session-reset-dialog"
-        ref={resetDialogRef}
-        className="session-reset-dialog"
+      {isResetPopupOpen && (
+      <div
+        id="session-reset-popup"
+        ref={resetPopupRef}
+        className="session-reset-popup"
+        role="dialog"
+        aria-modal="true"
         aria-labelledby="session-reset-title"
         aria-describedby="session-reset-description"
-        onClose={() => setIsResetDialogOpen(false)}
       >
-        <div className="session-reset-dialog-content">
+        <div className="session-reset-popup-content">
           <h2 id="session-reset-title">Начать новое чаепитие?</h2>
           <p id="session-reset-description">
             Счётчик проливов будет обнулён, а активный таймер остановлен
           </p>
-          <div className="session-reset-dialog-actions">
+          <div className="session-reset-popup-actions">
             <button
               type="button"
-              className="session-reset-dialog-button session-reset-cancel"
-              onClick={() => resetDialogRef.current?.close()}
+              className="session-reset-popup-button session-reset-cancel"
+              onClick={() => {
+                setIsResetPopupOpen(false);
+                resetButtonRef.current?.focus();
+              }}
               autoFocus
             >
               Отмена
             </button>
             <button
               type="button"
-              className="session-reset-dialog-button session-reset-confirm"
+              className="session-reset-popup-button session-reset-confirm"
               onClick={handleConfirmSessionReset}
             >
               Сбросить
             </button>
           </div>
         </div>
-      </dialog>
+      </div>
+      )}
     </section>
   );
 };
