@@ -490,7 +490,7 @@ const TeaTimer: React.FC = () => {
     <section className="timer-stack flex w-full flex-col" aria-label="Tea timer controls">
       <div
         className={`timer-setting transition-[opacity,transform] duration-300 motion-reduce:transition-none ${
-          hasActiveCountdown ? 'scale-[0.96] opacity-55' : 'opacity-100'
+          isBrewingActive ? 'scale-[0.96] opacity-55' : 'opacity-100'
         }`}
       >
         <TimeCarousel value={durationSeconds} onChange={setDurationSeconds} />
