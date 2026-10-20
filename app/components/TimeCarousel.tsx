@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, PointerEvent, WheelEvent } from 'react';
+import { useLanguage } from './LanguageContext';
 
 interface TimeCarouselProps {
   value: number;
@@ -23,27 +24,33 @@ const formatDuration = (totalSeconds: number) => {
   return `${minutes}\u2032${String(seconds).padStart(2, '0')}\u2033`;
 };
 
-const ITEM_WIDTH = 104;
+const ITEM_WIDTH = 112;
 const createRange = (start: number, end: number, step: number) =>
   Array.from({ length: Math.floor((end - start) / step) + 1 }, (_, index) => start + index * step);
 const TIME_VALUES = [
+  0,
   ...createRange(10, 50, 10),
   ...createRange(60, 4 * 60 + 30, 30),
   ...createRange(5 * 60, 10 * 60, 60),
   ...createRange(15 * 60, 55 * 60, 5 * 60),
 ];
 
-const getAccessibleDuration = (totalSeconds: number) => {
+const getAccessibleDuration = (
+  totalSeconds: number,
+  minuteLabel: string,
+  secondLabel: string,
+) => {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   const parts: string[] = [];
 
-  if (minutes > 0) parts.push(`${minutes} мин.`);
-  if (seconds > 0) parts.push(`${seconds} сек.`);
-  return parts.join(' ');
+  if (minutes > 0) parts.push(`${minutes} ${minuteLabel}`);
+  if (seconds > 0) parts.push(`${seconds} ${secondLabel}`);
+  return parts.length > 0 ? parts.join(' ') : `0 ${secondLabel}`;
 };
 
 export default function TimeCarousel({ value, onChange }: TimeCarouselProps) {
+  const { t } = useLanguage();
   const values = TIME_VALUES;
   const viewportRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef(new Map<number, HTMLButtonElement>());
@@ -129,6 +136,8 @@ export default function TimeCarousel({ value, onChange }: TimeCarouselProps) {
     );
     const closestValue = values[closestIndex];
 
+    if (closestValue === 0) return;
+
     if (closestValue !== selectedRef.current) {
       selectedRef.current = closestValue;
       setSelectedValue(closestValue);
@@ -154,8 +163,8 @@ export default function TimeCarousel({ value, onChange }: TimeCarouselProps) {
   };
 
   const moveSelection = (direction: number) => {
-    const currentIndex = values.indexOf(selectedRef.current);
-    const nextIndex = Math.max(0, Math.min(values.length - 1, currentIndex + direction));
+    const currentIndex = Math.max(1, values.indexOf(selectedRef.current));
+    const nextIndex = Math.max(1, Math.min(values.length - 1, currentIndex + direction));
     scrollToValue(values[nextIndex], 'smooth');
   };
 
@@ -167,7 +176,7 @@ export default function TimeCarousel({ value, onChange }: TimeCarouselProps) {
       0,
       Math.min(values.length - 1, Math.round(viewport.scrollLeft / ITEM_WIDTH)),
     );
-    scrollToValue(values[closestIndex], 'smooth');
+    scrollToValue(values[Math.max(1, closestIndex)], 'smooth');
   };
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
@@ -238,18 +247,18 @@ export default function TimeCarousel({ value, onChange }: TimeCarouselProps) {
 
     if (event.key === 'Home' || event.key === 'End') {
       event.preventDefault();
-      scrollToValue(event.key === 'Home' ? values[0] : values[values.length - 1], 'smooth');
+      scrollToValue(event.key === 'Home' ? values[1] : values[values.length - 1], 'smooth');
     }
   };
 
   return (
     <div className="time-carousel-shell">
-      <span className="time-carousel-label">Время заваривания</span>
+      <span className="time-carousel-label">{t('brewTime')}</span>
       <div
         ref={viewportRef}
         className="time-carousel"
         role="listbox"
-        aria-label="Время заваривания"
+        aria-label={t('brewTime')}
         aria-activedescendant={`time-option-${selectedValue}`}
         tabIndex={0}
         onScroll={handleScroll}
@@ -262,6 +271,7 @@ export default function TimeCarousel({ value, onChange }: TimeCarouselProps) {
       >
         {values.map((itemValue) => {
           const isSelected = itemValue === selectedValue;
+          const isDisabled = itemValue === 0;
 
           return (
             <button
@@ -272,10 +282,11 @@ export default function TimeCarousel({ value, onChange }: TimeCarouselProps) {
               }}
               id={`time-option-${itemValue}`}
               type="button"
-              className={`time-carousel-option${isSelected ? ' is-selected' : ''}`}
+              className={`time-carousel-option${isSelected ? ' is-selected' : ''}${isDisabled ? ' is-disabled' : ''}`}
               role="option"
-              aria-label={getAccessibleDuration(itemValue)}
+              aria-label={getAccessibleDuration(itemValue, t('minutes'), t('seconds'))}
               aria-selected={isSelected}
+              disabled={isDisabled}
               tabIndex={-1}
               onClick={() => {
                 if (suppressClickRef.current) {

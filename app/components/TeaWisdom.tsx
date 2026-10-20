@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import teaQuotesData from '../data/tea-quotes-popup-300.ru.json';
+import { useLanguage } from './LanguageContext';
 import { useTeaSession } from './TeaSessionContext';
 
 interface TeaQuote {
@@ -42,6 +43,7 @@ function TeaQuotePopup({
   onClose,
   onNext,
 }: TeaQuotePopupProps) {
+  const { t } = useLanguage();
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -67,16 +69,10 @@ function TeaQuotePopup({
         type="button"
         className="tea-wisdom-close"
         onClick={() => dialogRef.current?.close()}
-        aria-label="Закрыть чайное высказывание"
+        aria-label={t('closeTeaWisdom')}
         autoFocus
       >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          aria-hidden="true"
-        >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
           <path d="M5 5l14 14M19 5 5 19" strokeLinecap="round" />
         </svg>
       </button>
@@ -89,11 +85,11 @@ function TeaQuotePopup({
         <p className="tea-wisdom-author">— {quote.author}</p>
         {isTeaCoolingTooLong ? (
           <p className="tea-wisdom-cooling-notice" aria-live="polite">
-            Ваш чай остывает...
+            {t('teaCooling')}
           </p>
         ) : (
           <button type="button" className="tea-wisdom-next" onClick={onNext}>
-            Ещё
+            {t('more')}
           </button>
         )}
       </div>
@@ -102,6 +98,7 @@ function TeaQuotePopup({
 }
 
 export default function TeaWisdom() {
+  const { t } = useLanguage();
   const { isTeaCoolingTooLong } = useTeaSession();
   const [isOpen, setIsOpen] = useState(false);
   const [quote, setQuote] = useState<TeaQuote>(TEA_QUOTES[0]);
@@ -110,10 +107,7 @@ export default function TeaWisdom() {
 
   const selectNextQuote = () => {
     if (remainingIndexesRef.current.length === 0) {
-      remainingIndexesRef.current = createShuffledOrder(
-        TEA_QUOTES.length,
-        lastIndexRef.current,
-      );
+      remainingIndexesRef.current = createShuffledOrder(TEA_QUOTES.length, lastIndexRef.current);
     }
 
     const nextIndex = remainingIndexesRef.current.shift();
@@ -134,11 +128,11 @@ export default function TeaWisdom() {
         type="button"
         className="header-action tea-wisdom-trigger"
         onClick={openWisdom}
-        aria-label="Открыть чайное высказывание"
+        aria-label={t('openTeaWisdom')}
         aria-haspopup="dialog"
         aria-expanded={isOpen}
         aria-controls="tea-wisdom-dialog"
-        title="Чайное высказывание"
+        title={t('teaWisdom')}
       >
         <svg
           viewBox="0 0 24 24"

@@ -1,6 +1,7 @@
 'use client';
 
 import { useSyncExternalStore } from 'react';
+import { useLanguage } from './LanguageContext';
 
 type Theme = 'light' | 'dark';
 
@@ -38,6 +39,7 @@ const getThemeSnapshot = (): Theme =>
 const getServerThemeSnapshot = (): Theme => 'light';
 
 export default function ThemeToggle() {
+  const { t } = useLanguage();
   const theme = useSyncExternalStore(
     subscribeToTheme,
     getThemeSnapshot,
@@ -49,16 +51,18 @@ export default function ThemeToggle() {
     applyTheme(nextTheme);
   };
 
-  const nextThemeLabel = theme === 'light' ? 'dark' : 'light';
+  const nextThemeLabel = theme === 'light'
+    ? t('switchToDarkTheme')
+    : t('switchToLightTheme');
 
   return (
     <button
       type="button"
       className="header-action theme-toggle"
       onClick={toggleTheme}
-      aria-label={`Switch to ${nextThemeLabel} theme`}
+      aria-label={nextThemeLabel}
       aria-pressed={theme === 'dark'}
-      title={`Switch to ${nextThemeLabel} theme`}
+      title={nextThemeLabel}
     >
       {theme === 'light' ? (
         <svg

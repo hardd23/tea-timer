@@ -7,6 +7,7 @@ import React, {
   useState,
 } from 'react';
 import TimeCarousel from './TimeCarousel';
+import { useLanguage } from './LanguageContext';
 import { useTeaSession } from './TeaSessionContext';
 
 interface CompletedTimer {
@@ -30,29 +31,19 @@ const COOLING_DURATION_MS = 3 * 60 * 1000;
 const BREWING_PROGRESS_COLOR = '#88d982';
 const COOLING_PROGRESS_COLOR = '#72b7ff';
 
-const getPourWord = (count: number) => {
-  const lastTwoDigits = count % 100;
-
-  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) return 'проливов';
-
-  const lastDigit = count % 10;
-  if (lastDigit === 1) return 'пролив';
-  if (lastDigit >= 2 && lastDigit <= 4) return 'пролива';
-  return 'проливов';
-};
-
-const getPourVerb = (count: number) =>
-  getPourWord(count) === 'пролив' ? 'Сделан' : 'Сделано';
-
 const TeaTimer: React.FC = () => {
-  const { setIsTeaCoolingTooLong } = useTeaSession();
+  const { language, t } = useLanguage();
+  const {
+    registerSessionResetHandler,
+    setIsTeaCoolingTooLong,
+  } = useTeaSession();
   const [activeTimers, setActiveTimers] = useState<TimerInstance[]>([]);
   const [completedTimers, setCompletedTimers] = useState<CompletedTimer[]>([]);
+  const [manualPourOffset, setManualPourOffset] = useState(0);
   const [durationSeconds, setDurationSeconds] = useState(10);
   const [currentDisplayTimerId, setCurrentDisplayTimerId] = useState<string | null>(null);
   const [isResetPopupOpen, setIsResetPopupOpen] = useState(false);
   const progressCanvasRef = useRef<HTMLCanvasElement>(null);
-  const resetButtonRef = useRef<HTMLButtonElement>(null);
   const resetPopupRef = useRef<HTMLDivElement>(null);
   const resetInProgressRef = useRef(false);
   const progressValueRef = useRef(0);
@@ -77,6 +68,26 @@ const TeaTimer: React.FC = () => {
       currentDisplayTimer.timeLeft < -180,
   );
 
+  const getPourWord = (count: number) => {
+    if (language === 'en') return t('pourMany');
+
+    const lastTwoDigits = count % 100;
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 14) return t('pourMany');
+
+    const lastDigit = count % 10;
+    if (lastDigit === 1) return t('pourOne');
+    if (lastDigit >= 2 && lastDigit <= 4) return t('pourFew');
+    return t('pourMany');
+  };
+
+  const getPourVerb = (count: number) =>
+    language === 'en' || getPourWord(count) !== t('pourOne') ? t('madePlural') : t('made');
+
+  const openResetPopup = useCallback(() => {
+    resetInProgressRef.current = false;
+    setIsResetPopupOpen(true);
+  }, []);
+
   useEffect(() => {
     setIsTeaCoolingTooLong(isTeaCoolingTooLong);
   }, [isTeaCoolingTooLong, setIsTeaCoolingTooLong]);
@@ -86,13 +97,12 @@ const TeaTimer: React.FC = () => {
 
     const closePopup = (restoreFocus = false) => {
       setIsResetPopupOpen(false);
-      if (restoreFocus) resetButtonRef.current?.focus();
+      if (restoreFocus) document.getElementById('session-reset-button')?.focus();
     };
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
       if (
-        !resetPopupRef.current?.contains(target) &&
-        !resetButtonRef.current?.contains(target)
+        !resetPopupRef.current?.contains(target)
       ) {
         closePopup();
       }
@@ -109,6 +119,11 @@ const TeaTimer: React.FC = () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isResetPopupOpen]);
+
+  useEffect(
+    () => registerSessionResetHandler(openResetPopup),
+    [openResetPopup, registerSessionResetHandler],
+  );
 
   const setProgressBorderProgress = useCallback((progress: number, color: string) => {
     const canvas = progressCanvasRef.current;
@@ -458,11 +473,6 @@ const TeaTimer: React.FC = () => {
     handleResetTimer(timer.id);
   };
 
-  const openResetPopup = () => {
-    resetInProgressRef.current = false;
-    setIsResetPopupOpen(true);
-  };
-
   const handleConfirmSessionReset = () => {
     if (resetInProgressRef.current) return;
 
@@ -476,18 +486,29 @@ const TeaTimer: React.FC = () => {
     coolingStartedRef.current.clear();
     setActiveTimers([]);
     setCompletedTimers([]);
+    setManualPourOffset(0);
     setCurrentDisplayTimerId(null);
     setIsTeaCoolingTooLong(false);
     setProgressBorderProgress(0, BREWING_PROGRESS_COLOR);
     setIsResetPopupOpen(false);
   };
 
-  const completedCount = completedTimers.length;
-  const sizeGrowthCount = Math.min(completedCount, 10);
-  const completedCountFontSize = 42 + Math.log2(sizeGrowthCount + 1) * 8;
+  const completedCount = Math.min(
+    99,
+    Math.max(0, completedTimers.length + manualPourOffset),
+  );
+
+  const adjustPourCount = (amount: number) => {
+    setManualPourOffset((currentOffset) =>
+      Math.min(
+        99 - completedTimers.length,
+        Math.max(-completedTimers.length, currentOffset + amount),
+      ),
+    );
+  };
 
   return (
-    <section className="timer-stack flex w-full flex-col" aria-label="Tea timer controls">
+    <section className="timer-stack flex w-full flex-col" aria-label={t('teaTimerControls')}>
       <div
         className={`timer-setting transition-[opacity,transform] duration-300 motion-reduce:transition-none ${
           isBrewingActive ? 'scale-[0.96] opacity-55' : 'opacity-100'
@@ -503,7 +524,7 @@ const TeaTimer: React.FC = () => {
           className="control-button control-button-secondary"
           disabled={!currentDisplayTimer}
         >
-          Stop
+          {t('stop')}
         </button>
         <button
           type="button"
@@ -511,7 +532,7 @@ const TeaTimer: React.FC = () => {
           className="control-button control-button-primary col-span-2"
           disabled={isBrewingActive}
         >
-          Start
+          {t('start')}
         </button>
       </div>
 
@@ -525,51 +546,43 @@ const TeaTimer: React.FC = () => {
           aria-label={
             hasActiveCountdown && currentDisplayTimer
               ? currentDisplayTimer.timerPhase === 'cooling'
-                ? `${formatTime(currentDisplayTimer.timeLeft)} overtime`
-                : `${formatTime(currentDisplayTimer.timeLeft)} remaining`
-              : 'No active timers'
+                ? `${formatTime(currentDisplayTimer.timeLeft)} ${t('overtime')}`
+                : `${formatTime(currentDisplayTimer.timeLeft)} ${t('remaining')}`
+              : t('noActiveTimers')
           }
         >
           {hasActiveCountdown && currentDisplayTimer
             ? formatTime(currentDisplayTimer.timeLeft)
-            : 'No active timers'}
+            : t('noActiveTimers')}
         </output>
       </div>
 
       <div className="functional-block brew-counter-row">
         <p className="brew-counter" aria-live="polite" aria-atomic="true">
-          <span>{getPourVerb(completedCount)}</span>
-          <strong
-            className="brew-counter-value"
-            style={{ fontSize: `${completedCountFontSize}px` }}
+          <button
+            type="button"
+            className="header-action brew-counter-adjust"
+            onClick={() => adjustPourCount(-1)}
+            aria-label={t('decreasePourCount')}
           >
-            {completedCount}
-          </strong>
-          <span>{getPourWord(completedCount)}.</span>
+            <span aria-hidden="true">−</span>
+          </button>
+          <span className="brew-counter-content">
+            <span>{getPourVerb(completedCount)}</span>
+            <output className="brew-counter-value">
+              {completedCount}
+            </output>
+            <span>{getPourWord(completedCount)}</span>
+          </span>
+          <button
+            type="button"
+            className="header-action brew-counter-adjust"
+            onClick={() => adjustPourCount(1)}
+            aria-label={t('increasePourCount')}
+          >
+            <span aria-hidden="true">+</span>
+          </button>
         </p>
-        <button
-          type="button"
-          ref={resetButtonRef}
-          className="session-reset-button"
-          onClick={openResetPopup}
-          aria-label="Начать новое чаепитие"
-          aria-haspopup="dialog"
-          aria-expanded={isResetPopupOpen}
-          aria-controls="session-reset-popup"
-          title="Начать новое чаепитие"
-        >
-          <svg
-            className="session-reset-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            aria-hidden="true"
-          >
-            <path d="M3 12a9 9 0 1 0 3-6.7L3 8" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M3 3v5h5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
       </div>
 
       {isResetPopupOpen && (
@@ -583,9 +596,9 @@ const TeaTimer: React.FC = () => {
         aria-describedby="session-reset-description"
       >
         <div className="session-reset-popup-content">
-          <h2 id="session-reset-title">Начать новое чаепитие?</h2>
+          <h2 id="session-reset-title">{t('resetTitle')}</h2>
           <p id="session-reset-description">
-            Счётчик проливов будет обнулён, а активный таймер остановлен
+            {t('resetDescription')}
           </p>
           <div className="session-reset-popup-actions">
             <button
@@ -593,18 +606,18 @@ const TeaTimer: React.FC = () => {
               className="session-reset-popup-button session-reset-cancel"
               onClick={() => {
                 setIsResetPopupOpen(false);
-                resetButtonRef.current?.focus();
+                document.getElementById('session-reset-button')?.focus();
               }}
               autoFocus
             >
-              Отмена
+              {t('cancel')}
             </button>
             <button
               type="button"
               className="session-reset-popup-button session-reset-confirm"
               onClick={handleConfirmSessionReset}
             >
-              Сбросить
+              {t('reset')}
             </button>
           </div>
         </div>
