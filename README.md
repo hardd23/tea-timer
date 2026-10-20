@@ -53,6 +53,19 @@
 
 > Android может попросить разрешить установку приложений из этого источника — это стандартное системное сообщение для APK, скачанных не из Google Play.
 
+## Android-сборка
+
+Нужны Android SDK, JDK 21 и локальный ключ подписи.
+
+```bash
+npm run build
+npx cap sync android
+cd android
+gradlew.bat assembleRelease
+```
+
+Готовый APK появится в `android/app/build/outputs/apk/release/`. Настройки локальной подписи лежат в `android/keystore.properties`, а сам ключ — в `android/app/tea-timer-release.jks`. Оба файла исключены из Git — храните их резервную копию в защищённом месте.
+
 ## Локальный запуск
 
 Нужны Node.js 20+ и npm.
@@ -70,19 +83,6 @@ npm run dev
 | `npm run lint` | Проверить код ESLint. |
 | `npm run build` | Собрать статическую production-версию в `out/`. |
 | `npm start` | Запустить production-сервер Next.js. |
-
-## Android-сборка
-
-Нужны Android SDK, JDK 21 и локальный ключ подписи.
-
-```bash
-npm run build
-npx cap sync android
-cd android
-gradlew.bat assembleRelease
-```
-
-Готовый APK появится в `android/app/build/outputs/apk/release/`. Настройки локальной подписи лежат в `android/keystore.properties`, а сам ключ — в `android/app/tea-timer-release.jks`. Оба файла исключены из Git — храните их резервную копию в защищённом месте.
 
 ## Стек
 
