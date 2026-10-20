@@ -1,7 +1,7 @@
 # Чайный таймер
 
 <p align="center">
-  <img src="./assets/readme/hero.svg" width="100%" alt="Интерфейс Чайного таймера: время заваривания, обратный отсчёт и счётчик проливов">
+  <img src="./assets/readme/tea-timer-interface.png" width="420" alt="Актуальный интерфейс Чайного таймера: карусель времени, кнопки управления и счётчик проливов">
 </p>
 
 <p align="center">
@@ -100,7 +100,7 @@ app/
   data/                # Коллекция чайных высказываний
   globals.css          # Общая визуальная система
 android/               # Capacitor-проект и Android-сборка
-assets/readme/         # Иллюстрация для этой страницы
+assets/readme/         # Актуальный скриншот интерфейса для README
 public/notification.mp3 # Звук завершения заваривания
 ```
 
