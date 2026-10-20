@@ -1,24 +1,24 @@
 # Чайный таймер
 
 <p align="center">
+  <strong>Время для чая — без спешки.</strong><br>
+  Выберите заваривание, следите за остыванием и ведите счёт проливов.
+</p>
+
+<p align="center">
+  <a href="https://my-tea-timer.vercel.app/"><strong>Открыть веб-таймер</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/hardd23/tea-timer/releases/latest"><strong>Скачать Android APK</strong></a>
+</p>
+
+<p align="center">
   <img src="./assets/readme/tea-timer-interface.png" width="420" alt="Актуальный интерфейс Чайного таймера: карусель времени, кнопки управления и счётчик проливов">
 </p>
 
 <p align="center">
-  <strong>Небольшой таймер для вдумчивого чаепития.</strong><br>
-  Выберите время, заварите чай и не дайте ему остыть.
-</p>
-
-<p align="center">
-  <a href="https://my-tea-timer.vercel.app/"><strong>Открыть таймер</strong></a>
-  &nbsp;·&nbsp;
-  <a href="https://github.com/hardd23/tea-timer/releases/latest"><strong>Скачать для Android</strong></a>
-</p>
-
-<p align="center">
-  <a href="https://my-tea-timer.vercel.app/"><img src="https://img.shields.io/badge/Веб--версия-Открыть-2e7d32?style=flat-square" alt="Открыть веб-версию"></a>
-  <a href="https://github.com/hardd23/tea-timer/releases/latest"><img src="https://img.shields.io/badge/Android-APK-3ddc84?style=flat-square&amp;logo=android&amp;logoColor=white" alt="Скачать Android APK"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/Лицензия-MIT-5f6b61?style=flat-square" alt="Лицензия MIT"></a>
+  <a href="https://my-tea-timer.vercel.app/"><img src="https://img.shields.io/badge/Веб--версия-online-2e7d32?style=flat-square" alt="Веб-версия доступна"></a>
+  <a href="https://github.com/hardd23/tea-timer/releases/latest"><img src="https://img.shields.io/badge/Android-v1.1.0-3ddc84?style=flat-square&amp;logo=android&amp;logoColor=white" alt="Android 1.1.0"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/Код-MIT-5f6b61?style=flat-square" alt="Код под лицензией MIT"></a>
 </p>
 
 ## Что умеет
