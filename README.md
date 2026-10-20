@@ -1,123 +1,117 @@
-# Tea Timer
+# Чайный таймер
 
 <p align="center">
-  <img src="./assets/readme/hero.svg" width="100%" alt="Tea Timer interface preview showing the brewing countdown, cooling overtime, and brew counter">
+  <img src="./assets/readme/hero.svg" width="100%" alt="Интерфейс Чайного таймера: время заваривания, обратный отсчёт и счётчик проливов">
 </p>
 
 <p align="center">
-  <a href="https://my-tea-timer.vercel.app/"><strong>Open the live app</strong></a>
+  <strong>Небольшой таймер для вдумчивого чаепития.</strong><br>
+  Выберите время, заварите чай и не дайте ему остыть.
 </p>
 
-A compact, mobile-first timer for tea brewing. Set the duration with a tactile horizontal carousel, hear when steeping is complete, and track how long the tea has been cooling.
+<p align="center">
+  <a href="https://my-tea-timer.vercel.app/"><strong>Открыть таймер</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/hardd23/tea-timer/releases/latest"><strong>Скачать для Android</strong></a>
+</p>
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.2.4-black?logo=next.js)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19.2.4-61dafb?logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38bdf8?logo=tailwindcss)](https://tailwindcss.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+<p align="center">
+  <a href="https://my-tea-timer.vercel.app/"><img src="https://img.shields.io/badge/Веб--версия-Открыть-2e7d32?style=flat-square" alt="Открыть веб-версию"></a>
+  <a href="https://github.com/hardd23/tea-timer/releases/latest"><img src="https://img.shields.io/badge/Android-APK-3ddc84?style=flat-square&amp;logo=android&amp;logoColor=white" alt="Скачать Android APK"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/Лицензия-MIT-5f6b61?style=flat-square" alt="Лицензия MIT"></a>
+</p>
 
-## Overview
+## Что умеет
 
-Tea Timer is a small, touch-friendly brewing timer with a two-phase flow:
+| | Возможность |
+| --- | --- |
+| ⏳ | Горизонтальная карусель времени — от 10 секунд до 55 минут с удобным шагом. `0″` показан отдельно и недоступен для запуска. |
+| 🍵 | Две фазы таймера: заваривание до нуля и отсчёт остывания после него. |
+| 🔢 | Счётчик проливов с автоматическим учётом и ручной корректировкой кнопками `−` / `+` — до 99. |
+| 🌗 | Светлая и тёмная темы, которые запоминаются на устройстве. |
+| RU / EN | Русский и английский интерфейс без перезагрузки страницы. |
+| 💬 | 315 чайных высказываний в случайном порядке. |
 
-1. **Brewing**: the timer counts down from the selected duration.
-2. **Cooling**: after zero, the timer keeps counting into negative time so you can see how long the tea has been waiting.
+## Как это работает
 
-The interface is intentionally narrow and stable: the active timer keeps its place in the layout, and the elapsed time stays accurate when the tab is hidden or the device sleeps.
+1. Выберите время на карусели и нажмите «Старт».
+2. Во время заваривания граница таймера показывает ход отсчёта.
+3. Когда время выйдет, таймер автоматически перейдёт в режим остывания, а счётчик добавит пролив.
+4. Нажмите красную кнопку сброса, чтобы начать новое чаепитие.
 
-## Features
+Таймер использует точное время окончания, поэтому восстанавливает корректный результат после сворачивания вкладки или блокировки экрана.
 
-- **Time carousel** with adaptive increments: 10 seconds below one minute, 30 seconds through five minutes, one minute through 10 minutes, and five minutes after that.
-- **Two-phase progress** with a smooth brewing border, red negative-time display, and a three-minute cooling indicator.
-- **Brew counter** with correct Russian plural forms; a brew is counted as soon as steeping reaches zero.
-- **Tea wisdom dialog** with 315 shuffled quotes and a cooling reminder when tea has waited too long.
-- **Persistent light and dark themes**, responsive layout, keyboard controls, and reduced-motion support.
+## Открыть или установить
 
-## Timer Lifecycle
+### Веб-версия
 
-1. Choose a duration from `00:10` to `55:00`; the increment grows from 10 seconds to 30 seconds, then to one minute and five minutes.
-2. During brewing, the timer uses an absolute end timestamp so returning to the tab restores the correct time.
-3. At zero, the notification sounds, the brew counter increases, and cooling overtime begins.
-4. `Stop` removes the active timer; stopping before zero does not increase the brew counter.
-5. Starting another brew replaces the current cooling timer while preserving the completed-brew count.
+Откройте [my-tea-timer.vercel.app](https://my-tea-timer.vercel.app/) в современном браузере на телефоне или компьютере.
 
-## Tea Quotes
+### Android
 
-The quote button opens a native dialog and walks through a shuffled collection without repeats until the current cycle is exhausted. The collection contains **315 entries**, including 15 original phrases credited to **Сергей Шевелёв (Мой Чай)**.
+Скачайте актуальный файл `Tea-Timer-*.apk` со страницы [Releases](https://github.com/hardd23/tea-timer/releases/latest), откройте его на Android-устройстве и подтвердите установку. APK подписан постоянным ключом приложения, поэтому следующие версии можно устанавливать поверх предыдущих.
 
-While tea has been cooling for more than three minutes, the dialog replaces the next-quote action with the reminder `Ваш чай остывает...`.
+> Android может попросить разрешить установку приложений из этого источника — это стандартное системное сообщение для APK, скачанных не из Google Play.
 
-## Tech Stack
+## Локальный запуск
 
-- [Next.js](https://nextjs.org/) 16.2.4
-- [React](https://react.dev/) 19.2.4
-- [TypeScript](https://www.typescriptlang.org/)
-- [Tailwind CSS](https://tailwindcss.com/) 4
-- [Vercel Speed Insights](https://vercel.com/docs/speed-insights)
-
-## Getting Started
+Нужны Node.js 20+ и npm.
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+После запуска откройте [http://localhost:3000](http://localhost:3000).
 
-## Scripts
+| Команда | Назначение |
+| --- | --- |
+| `npm run dev` | Запустить режим разработки. |
+| `npm run lint` | Проверить код ESLint. |
+| `npm run build` | Собрать статическую production-версию в `out/`. |
+| `npm start` | Запустить production-сервер Next.js. |
+
+## Android-сборка
+
+Нужны Android SDK, JDK 21 и локальный ключ подписи.
 
 ```bash
-npm run dev
-npm run lint
 npm run build
-npm start
+npx cap sync android
+cd android
+gradlew.bat assembleRelease
 ```
 
-`npm run dev` starts Next.js with the webpack dev server.
+Готовый APK появится в `android/app/build/outputs/apk/release/`. Настройки локальной подписи лежат в `android/keystore.properties`, а сам ключ — в `android/app/tea-timer-release.jks`. Оба файла исключены из Git — храните их резервную копию в защищённом месте.
 
-## Project Structure
+## Стек
+
+- [Next.js](https://nextjs.org/) 16 · статический экспорт
+- [React](https://react.dev/) 19 · [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS](https://tailwindcss.com/) 4
+- [Capacitor](https://capacitorjs.com/) 8 · Android
+- [Vercel](https://vercel.com/) · веб-публикация
+
+## Структура проекта
 
 ```text
 app/
-  components/
-    TimeCarousel.tsx        # Touch and keyboard duration carousel
-    TeaSessionContext.tsx   # Shared cooling state
-    TeaTimer.tsx            # Timer phases, progress, sound, and brew count
-    TeaWisdom.tsx           # Shuffled quote dialog
-    ThemeToggle.tsx         # Persistent light/dark theme control
-  data/
-    tea-quotes-popup-300.ru.json  # 315 attributed tea quotes
-  globals.css               # Theme tokens, responsive layout, and motion
-  layout.tsx                # Root metadata, theme initialization, insights
-  page.tsx                  # Page shell, header, timer, and footer
-assets/readme/
-  hero.svg                  # GitHub README preview
-public/
-  notification.mp3          # Brewing completion sound
+  components/          # Таймер, карусель, темы, языки и диалоги
+  data/                # Коллекция чайных высказываний
+  globals.css          # Общая визуальная система
+android/               # Capacitor-проект и Android-сборка
+assets/readme/         # Иллюстрация для этой страницы
+public/notification.mp3 # Звук завершения заваривания
 ```
 
-## Links
+## Ссылки
 
-- HARDD LAB: https://hardd-lab.vercel.app/
-- Telegram: https://t.me/hardd_lab
-- GitHub: https://github.com/hardd23/tea-timer
-- Demo: https://my-tea-timer.vercel.app/
-- Tribute: https://web.tribute.tg/d/OyG
+- [Веб-версия](https://my-tea-timer.vercel.app/)
+- [Android-релизы](https://github.com/hardd23/tea-timer/releases)
+- [Telegram @hardd23](https://t.me/hardd23)
+- [GitHub-репозиторий](https://github.com/hardd23/tea-timer)
+- [Угостить автора чаем](https://web.tribute.tg/d/OyG)
 
-## Verification
+## Лицензия
 
-Before publishing changes, run:
-
-```bash
-npm run lint
-npm run build
-git diff --check
-```
-
-The production build is deployed on Vercel and includes Vercel Speed Insights.
-
-## License
-
-The [MIT License](./LICENSE) applies to the source code.
-
-Branding, logos, visual assets, and separately created content may have separate rights and attribution requirements. See [NOTICE.md](./NOTICE.md) for project credits and content attribution.
+Исходный код распространяется по [лицензии MIT](./LICENSE). Атрибуция визуальных материалов и чайных высказываний указана в [NOTICE.md](./NOTICE.md).
