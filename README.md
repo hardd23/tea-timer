@@ -71,19 +71,6 @@ npm run dev
 | `npm run build` | Собрать статическую production-версию в `out/`. |
 | `npm start` | Запустить production-сервер Next.js. |
 
-## Android-сборка
-
-Нужны Android SDK, JDK 21 и локальный ключ подписи.
-
-```bash
-npm run build
-npx cap sync android
-cd android
-gradlew.bat assembleRelease
-```
-
-Готовый APK появится в `android/app/build/outputs/apk/release/`. Настройки локальной подписи лежат в `android/keystore.properties`, а сам ключ — в `android/app/tea-timer-release.jks`. Оба файла исключены из Git — храните их резервную копию в защищённом месте.
-
 ## Стек
 
 - [Next.js](https://nextjs.org/) 16 · статический экспорт
@@ -99,7 +86,6 @@ app/
   components/          # Таймер, карусель, темы, языки и диалоги
   data/                # Коллекция чайных высказываний
   globals.css          # Общая визуальная система
-android/               # Capacitor-проект и Android-сборка
 assets/readme/         # Иллюстрация для этой страницы
 public/notification.mp3 # Звук завершения заваривания
 ```
