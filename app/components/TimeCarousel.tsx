@@ -23,10 +23,16 @@ interface PointerDragState {
   pointerId: number;
   lastY: number;
   distance: number;
+  stepDistance: number;
 }
 
-const DRAG_STEP_PX = 24;
-const WHEEL_STEP_PX = 32;
+const INPUT_STEP_RATIO = 0.4;
+const MIN_INPUT_STEP_PX = 48;
+const WHEEL_LINE_PX = 20;
+const WHEEL_IDLE_RESET_MS = 180;
+
+const getInputStepDistance = (height: number) =>
+  Math.max(MIN_INPUT_STEP_PX, height * INPUT_STEP_RATIO);
 
 const padTimePart = (value: number) => value.toString().padStart(2, '0');
 
@@ -68,14 +74,25 @@ function TimeWheel({
       event.preventDefault();
       event.stopPropagation();
 
+      const stepDistance = getInputStepDistance(wheel.clientHeight);
       const multiplier = event.deltaMode === WheelEvent.DOM_DELTA_LINE
-        ? 16
+        ? WHEEL_LINE_PX
         : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
           ? wheel.clientHeight
           : 1;
-      wheelDistanceRef.current += event.deltaY * multiplier;
+      const normalizedDelta = Math.sign(event.deltaY)
+        * Math.min(Math.abs(event.deltaY * multiplier), stepDistance);
 
-      if (Math.abs(wheelDistanceRef.current) >= WHEEL_STEP_PX) {
+      if (
+        wheelDistanceRef.current !== 0
+        && Math.sign(wheelDistanceRef.current) !== Math.sign(normalizedDelta)
+      ) {
+        wheelDistanceRef.current = 0;
+      }
+
+      wheelDistanceRef.current += normalizedDelta;
+
+      if (Math.abs(wheelDistanceRef.current) >= stepDistance) {
         onStep(wheelDistanceRef.current > 0 ? 1 : -1);
         wheelDistanceRef.current = 0;
       }
@@ -86,7 +103,7 @@ function TimeWheel({
       wheelResetRef.current = window.setTimeout(() => {
         wheelDistanceRef.current = 0;
         wheelResetRef.current = null;
-      }, 160);
+      }, WHEEL_IDLE_RESET_MS);
     };
 
     wheel.addEventListener('wheel', handleWheel, { passive: false });
@@ -102,12 +119,12 @@ function TimeWheel({
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
 
-    event.currentTarget.focus();
     event.currentTarget.setPointerCapture(event.pointerId);
     pointerDragRef.current = {
       pointerId: event.pointerId,
       lastY: event.clientY,
       distance: 0,
+      stepDistance: getInputStepDistance(event.currentTarget.clientHeight),
     };
   };
 
@@ -120,10 +137,10 @@ function TimeWheel({
     drag.lastY = event.clientY;
     drag.distance += movement;
 
-    while (Math.abs(drag.distance) >= DRAG_STEP_PX) {
+    while (Math.abs(drag.distance) >= drag.stepDistance) {
       const direction = drag.distance > 0 ? 1 : -1;
       onStep(direction);
-      drag.distance -= direction * DRAG_STEP_PX;
+      drag.distance -= direction * drag.stepDistance;
     }
   };
 
@@ -210,14 +227,7 @@ export default function TimeCarousel({ value, onChange }: TimeCarouselProps) {
     const currentMinutes = Math.floor(valueRef.current / 60);
     const currentSeconds = valueRef.current % 60;
     const nextSeconds = (currentSeconds + direction * 10 + 60) % 60;
-    const crossesForwardBoundary = direction === 1 && currentSeconds === 50;
-    const crossesBackwardBoundary = direction === -1 && currentSeconds === 0;
-    const nextMinutes = crossesForwardBoundary
-      ? (currentMinutes + 1) % 60
-      : crossesBackwardBoundary
-        ? (currentMinutes - 1 + 60) % 60
-        : currentMinutes;
-    commitValue(nextMinutes, nextSeconds);
+    commitValue(currentMinutes, nextSeconds);
   }, [commitValue]);
 
   const setMinutes = useCallback((minutes: number) => {
