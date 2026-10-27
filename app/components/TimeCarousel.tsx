@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { KeyboardEvent, PointerEvent, WheelEvent } from 'react';
+import type { KeyboardEvent, PointerEvent } from 'react';
 import { useLanguage } from './LanguageContext';
 
 interface TimeCarouselProps {
@@ -9,299 +9,250 @@ interface TimeCarouselProps {
   onChange: (value: number) => void;
 }
 
-interface MouseDragState {
-  pointerId: number;
-  startX: number;
-  startScrollLeft: number;
-  didMove: boolean;
+interface TimeWheelProps {
+  ariaLabel: string;
+  max: number;
+  step: number;
+  unit: '\u2032' | '\u2033';
+  value: number;
+  onStep: (direction: 1 | -1) => void;
+  onSet: (value: number) => void;
 }
 
-const formatDuration = (totalSeconds: number) => {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
+interface PointerDragState {
+  pointerId: number;
+  lastY: number;
+  distance: number;
+}
 
-  if (minutes === 0) return `${seconds}\u2033`;
-  return `${minutes}\u2032${String(seconds).padStart(2, '0')}\u2033`;
-};
+const DRAG_STEP_PX = 24;
+const WHEEL_STEP_PX = 32;
 
-const ITEM_WIDTH = 112;
-const createRange = (start: number, end: number, step: number) =>
-  Array.from({ length: Math.floor((end - start) / step) + 1 }, (_, index) => start + index * step);
-const TIME_VALUES = [
-  0,
-  ...createRange(10, 50, 10),
-  ...createRange(60, 4 * 60 + 30, 30),
-  ...createRange(5 * 60, 10 * 60, 60),
-  ...createRange(15 * 60, 55 * 60, 5 * 60),
-];
+const padTimePart = (value: number) => value.toString().padStart(2, '0');
 
-const getAccessibleDuration = (
-  totalSeconds: number,
-  minuteLabel: string,
-  secondLabel: string,
-) => {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  const parts: string[] = [];
-
-  if (minutes > 0) parts.push(`${minutes} ${minuteLabel}`);
-  if (seconds > 0) parts.push(`${seconds} ${secondLabel}`);
-  return parts.length > 0 ? parts.join(' ') : `0 ${secondLabel}`;
-};
-
-export default function TimeCarousel({ value, onChange }: TimeCarouselProps) {
-  const { t } = useLanguage();
-  const values = TIME_VALUES;
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef(new Map<number, HTMLButtonElement>());
-  const initialValueRef = useRef(value);
-  const selectedRef = useRef(value);
-  const animationFrameRef = useRef<number | null>(null);
-  const wheelTimeoutRef = useRef<number | null>(null);
-  const scrollEndTimeoutRef = useRef<number | null>(null);
-  const mouseDragRef = useRef<MouseDragState | null>(null);
-  const suppressClickRef = useRef(false);
-  const [selectedValue, setSelectedValue] = useState(value);
-
-  const scrollToValue = useCallback((nextValue: number, behavior: ScrollBehavior) => {
-    const viewport = viewportRef.current;
-    const item = itemRefs.current.get(nextValue);
-    if (!viewport || !item) return;
-
-    const viewportBounds = viewport.getBoundingClientRect();
-    const itemBounds = item.getBoundingClientRect();
-    const left =
-      viewport.scrollLeft +
-      itemBounds.left +
-      itemBounds.width / 2 -
-      (viewportBounds.left + viewportBounds.width / 2);
-    viewport.scrollTo({ left, behavior });
-  }, []);
+function TimeWheel({
+  ariaLabel,
+  max,
+  step,
+  unit,
+  value,
+  onStep,
+  onSet,
+}: TimeWheelProps) {
+  const wheelRef = useRef<HTMLDivElement>(null);
+  const pointerDragRef = useRef<PointerDragState | null>(null);
+  const wheelDistanceRef = useRef(0);
+  const wheelResetRef = useRef<number | null>(null);
+  const previousValueRef = useRef(value);
+  const motionIdRef = useRef(0);
+  const [motion, setMotion] = useState<{ direction: 1 | -1; id: number } | null>(null);
 
   useEffect(() => {
-    const resetToInitial = () => {
-      selectedRef.current = initialValueRef.current;
-      setSelectedValue(initialValueRef.current);
-      onChange(initialValueRef.current);
-      scrollToValue(initialValueRef.current, 'auto');
+    if (value === previousValueRef.current) return;
+
+    const range = max + step;
+    const forwardDistance = (value - previousValueRef.current + range) % range;
+    const direction = forwardDistance === step ? 1 : -1;
+    previousValueRef.current = value;
+    motionIdRef.current += 1;
+    setMotion({ direction, id: motionIdRef.current });
+  }, [max, step, value]);
+
+  useEffect(() => {
+    const wheel = wheelRef.current;
+    if (!wheel) return;
+
+    const handleWheel = (event: WheelEvent) => {
+      if (event.deltaY === 0) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const multiplier = event.deltaMode === WheelEvent.DOM_DELTA_LINE
+        ? 16
+        : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+          ? wheel.clientHeight
+          : 1;
+      wheelDistanceRef.current += event.deltaY * multiplier;
+
+      if (Math.abs(wheelDistanceRef.current) >= WHEEL_STEP_PX) {
+        onStep(wheelDistanceRef.current > 0 ? 1 : -1);
+        wheelDistanceRef.current = 0;
+      }
+
+      if (wheelResetRef.current !== null) {
+        window.clearTimeout(wheelResetRef.current);
+      }
+      wheelResetRef.current = window.setTimeout(() => {
+        wheelDistanceRef.current = 0;
+        wheelResetRef.current = null;
+      }, 160);
     };
 
-    resetToInitial();
-
-    let secondFrame = 0;
-    const firstFrame = requestAnimationFrame(() => {
-      secondFrame = requestAnimationFrame(() => {
-        resetToInitial();
-      });
-    });
-    const restorationTimeout = window.setTimeout(resetToInitial, 120);
+    wheel.addEventListener('wheel', handleWheel, { passive: false });
 
     return () => {
-      cancelAnimationFrame(firstFrame);
-      cancelAnimationFrame(secondFrame);
-      window.clearTimeout(restorationTimeout);
+      wheel.removeEventListener('wheel', handleWheel);
+      if (wheelResetRef.current !== null) {
+        window.clearTimeout(wheelResetRef.current);
+      }
     };
-  }, [onChange, scrollToValue]);
-
-  useEffect(() => {
-    if (value === selectedRef.current) return;
-
-    selectedRef.current = value;
-    setSelectedValue(value);
-    scrollToValue(value, 'smooth');
-  }, [scrollToValue, value]);
-
-  useEffect(
-    () => () => {
-      if (animationFrameRef.current !== null) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      if (wheelTimeoutRef.current !== null) {
-        window.clearTimeout(wheelTimeoutRef.current);
-      }
-      if (scrollEndTimeoutRef.current !== null) {
-        window.clearTimeout(scrollEndTimeoutRef.current);
-      }
-    },
-    [],
-  );
-
-  const selectClosestItem = useCallback(() => {
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-
-    const closestIndex = Math.max(
-      0,
-      Math.min(values.length - 1, Math.round(viewport.scrollLeft / ITEM_WIDTH)),
-    );
-    const closestValue = values[closestIndex];
-
-    if (closestValue === 0) return;
-
-    if (closestValue !== selectedRef.current) {
-      selectedRef.current = closestValue;
-      setSelectedValue(closestValue);
-      onChange(closestValue);
-    }
-  }, [onChange, values]);
-
-  const handleScroll = () => {
-    if (animationFrameRef.current !== null) return;
-
-    animationFrameRef.current = requestAnimationFrame(() => {
-      animationFrameRef.current = null;
-      selectClosestItem();
-    });
-
-    if (scrollEndTimeoutRef.current !== null) {
-      window.clearTimeout(scrollEndTimeoutRef.current);
-    }
-    scrollEndTimeoutRef.current = window.setTimeout(() => {
-      scrollEndTimeoutRef.current = null;
-      snapToClosest();
-    }, 120);
-  };
-
-  const moveSelection = (direction: number) => {
-    const currentIndex = Math.max(1, values.indexOf(selectedRef.current));
-    const nextIndex = Math.max(1, Math.min(values.length - 1, currentIndex + direction));
-    scrollToValue(values[nextIndex], 'smooth');
-  };
-
-  const snapToClosest = () => {
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-
-    const closestIndex = Math.max(
-      0,
-      Math.min(values.length - 1, Math.round(viewport.scrollLeft / ITEM_WIDTH)),
-    );
-    scrollToValue(values[Math.max(1, closestIndex)], 'smooth');
-  };
+  }, [onStep]);
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType !== 'mouse' || event.button !== 0) return;
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
 
     event.currentTarget.focus();
     event.currentTarget.setPointerCapture(event.pointerId);
-    event.currentTarget.classList.add('is-dragging');
-    suppressClickRef.current = false;
-    mouseDragRef.current = {
+    pointerDragRef.current = {
       pointerId: event.pointerId,
-      startX: event.clientX,
-      startScrollLeft: event.currentTarget.scrollLeft,
-      didMove: false,
+      lastY: event.clientY,
+      distance: 0,
     };
   };
 
   const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    const drag = mouseDragRef.current;
+    const drag = pointerDragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
 
-    const distance = drag.startX - event.clientX;
-    if (Math.abs(distance) > 4) {
-      drag.didMove = true;
-      suppressClickRef.current = true;
+    event.preventDefault();
+    const movement = drag.lastY - event.clientY;
+    drag.lastY = event.clientY;
+    drag.distance += movement;
+
+    while (Math.abs(drag.distance) >= DRAG_STEP_PX) {
+      const direction = drag.distance > 0 ? 1 : -1;
+      onStep(direction);
+      drag.distance -= direction * DRAG_STEP_PX;
     }
-    event.currentTarget.scrollLeft = drag.startScrollLeft + distance;
   };
 
   const finishPointerDrag = (event: PointerEvent<HTMLDivElement>) => {
-    const drag = mouseDragRef.current;
+    const drag = pointerDragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
 
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    event.currentTarget.classList.remove('is-dragging');
-    mouseDragRef.current = null;
-    snapToClosest();
-  };
-
-  const handleWheel = (event: WheelEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
-    event.currentTarget.scrollLeft += delta;
-
-    if (wheelTimeoutRef.current !== null) {
-      window.clearTimeout(wheelTimeoutRef.current);
-    }
-    wheelTimeoutRef.current = window.setTimeout(() => {
-      wheelTimeoutRef.current = null;
-      snapToClosest();
-    }, 100);
+    pointerDragRef.current = null;
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    const direction = event.key === 'ArrowRight' || event.key === 'ArrowUp'
+    const direction = event.key === 'ArrowUp' || event.key === 'ArrowRight'
       ? 1
-      : event.key === 'ArrowLeft' || event.key === 'ArrowDown'
+      : event.key === 'ArrowDown' || event.key === 'ArrowLeft'
         ? -1
         : 0;
 
     if (direction !== 0) {
       event.preventDefault();
-      moveSelection(direction);
+      onStep(direction);
       return;
     }
 
     if (event.key === 'Home' || event.key === 'End') {
       event.preventDefault();
-      scrollToValue(event.key === 'Home' ? values[1] : values[values.length - 1], 'smooth');
+      onSet(event.key === 'Home' ? 0 : max);
     }
   };
 
   return (
-    <div className="time-carousel-shell">
-      <span className="time-carousel-label">{t('brewTime')}</span>
-      <div
-        ref={viewportRef}
-        className="time-carousel"
-        role="listbox"
-        aria-label={t('brewTime')}
-        aria-activedescendant={`time-option-${selectedValue}`}
-        tabIndex={0}
-        onScroll={handleScroll}
-        onKeyDown={handleKeyDown}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={finishPointerDrag}
-        onPointerCancel={finishPointerDrag}
-        onWheel={handleWheel}
-      >
-        {values.map((itemValue) => {
-          const isSelected = itemValue === selectedValue;
-          const isDisabled = itemValue === 0;
+    <div
+      ref={wheelRef}
+      className="time-wheel"
+      role="spinbutton"
+      aria-label={ariaLabel}
+      aria-valuemin={0}
+      aria-valuemax={max}
+      aria-valuenow={value}
+      aria-valuetext={`${padTimePart(value)} ${ariaLabel}`}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={finishPointerDrag}
+      onPointerCancel={finishPointerDrag}
+    >
+      <span className="time-wheel-value" aria-hidden="true">
+        <span
+          key={`${value}-${motion?.id ?? 0}`}
+          className={`time-wheel-number${motion ? ` is-${motion.direction > 0 ? 'next' : 'previous'}` : ''}`}
+        >
+          {padTimePart(value)}
+        </span>
+        <span className="time-wheel-unit">{unit}</span>
+      </span>
+    </div>
+  );
+}
 
-          return (
-            <button
-              key={itemValue}
-              ref={(node) => {
-                if (node) itemRefs.current.set(itemValue, node);
-                else itemRefs.current.delete(itemValue);
-              }}
-              id={`time-option-${itemValue}`}
-              type="button"
-              className={`time-carousel-option${isSelected ? ' is-selected' : ''}${isDisabled ? ' is-disabled' : ''}`}
-              role="option"
-              aria-label={getAccessibleDuration(itemValue, t('minutes'), t('seconds'))}
-              aria-selected={isSelected}
-              disabled={isDisabled}
-              tabIndex={-1}
-              onClick={() => {
-                if (suppressClickRef.current) {
-                  suppressClickRef.current = false;
-                  return;
-                }
-                scrollToValue(itemValue, 'smooth');
-              }}
-            >
-              <span className={itemValue >= 60 ? 'has-minutes' : undefined}>
-                {formatDuration(itemValue)}
-              </span>
-            </button>
-          );
-        })}
+export default function TimeCarousel({ value, onChange }: TimeCarouselProps) {
+  const { t } = useLanguage();
+  const valueRef = useRef(value);
+
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
+
+  const commitValue = useCallback((minutes: number, seconds: number) => {
+    const nextValue = minutes * 60 + seconds;
+    valueRef.current = nextValue;
+    onChange(nextValue);
+  }, [onChange]);
+
+  const stepMinutes = useCallback((direction: 1 | -1) => {
+    const currentMinutes = Math.floor(valueRef.current / 60);
+    const currentSeconds = valueRef.current % 60;
+    commitValue((currentMinutes + direction + 60) % 60, currentSeconds);
+  }, [commitValue]);
+
+  const stepSeconds = useCallback((direction: 1 | -1) => {
+    const currentMinutes = Math.floor(valueRef.current / 60);
+    const currentSeconds = valueRef.current % 60;
+    const nextSeconds = (currentSeconds + direction * 10 + 60) % 60;
+    const crossesForwardBoundary = direction === 1 && currentSeconds === 50;
+    const crossesBackwardBoundary = direction === -1 && currentSeconds === 0;
+    const nextMinutes = crossesForwardBoundary
+      ? (currentMinutes + 1) % 60
+      : crossesBackwardBoundary
+        ? (currentMinutes - 1 + 60) % 60
+        : currentMinutes;
+    commitValue(nextMinutes, nextSeconds);
+  }, [commitValue]);
+
+  const setMinutes = useCallback((minutes: number) => {
+    commitValue(minutes, valueRef.current % 60);
+  }, [commitValue]);
+
+  const setSeconds = useCallback((seconds: number) => {
+    commitValue(Math.floor(valueRef.current / 60), seconds);
+  }, [commitValue]);
+
+  const minutes = Math.floor(value / 60);
+  const seconds = value % 60;
+
+  return (
+    <div className="time-carousel-shell">
+      <span id="brew-time-label" className="time-carousel-label">{t('brewTime')}</span>
+      <div className="time-wheel-picker" role="group" aria-labelledby="brew-time-label">
+        <TimeWheel
+          ariaLabel={t('minutes')}
+          max={59}
+          step={1}
+          unit={'\u2032'}
+          value={minutes}
+          onStep={stepMinutes}
+          onSet={setMinutes}
+        />
+        <TimeWheel
+          ariaLabel={t('seconds')}
+          max={50}
+          step={10}
+          unit={'\u2033'}
+          value={seconds}
+          onStep={stepSeconds}
+          onSet={setSeconds}
+        />
       </div>
     </div>
   );

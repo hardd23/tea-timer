@@ -2,8 +2,24 @@
 
 :root {
   --font-ui: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --ui-font-size: 1rem;
-  --ui-font-weight: 500;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --type-size-meta: 0.75rem;
+  --type-size-footer: clamp(0.8125rem, 2vw, 0.875rem);
+  --type-size-counter-label: 0.875rem;
+  --type-size-label: 0.9375rem;
+  --type-size-body: 1rem;
+  --type-size-title: 1.25rem;
+  --type-size-brand-mark: 1.65rem;
+  --type-size-countdown: clamp(3rem, 14vw, 3.375rem);
+  --type-size-wheel: clamp(3.5rem, 17vw, 4rem);
+  --type-size-wheel-unit: clamp(1.25rem, 6vw, 1.5rem);
+  --type-size-counter: 1.75rem;
+  --type-size-dialog-title: clamp(1.75rem, 7vw, 2.5rem);
+  --type-size-wisdom-mark: clamp(3rem, 14vw, 5rem);
+  --type-size-wisdom-quote: clamp(1.75rem, 7vw, 3.25rem);
+  --ui-font-size: var(--type-size-body);
   --color-bg-primary: #f4f1e8;
   --color-bg-secondary: #ebe7dc;
   --color-bg-elevated: #f8f5ed;
@@ -23,6 +39,11 @@
   --color-footer-hover: #59645b;
   --color-selection: rgb(57 123 89 / 20%);
   --shadow-toggle: 0 1px 3px rgb(50 57 51 / 18%);
+  --space-control-inline: clamp(0.75rem, 4vw, 1rem);
+  --space-section: clamp(1.25rem, 3.5vh, 1.75rem);
+  --space-section: clamp(1.25rem, 3.5dvh, 1.75rem);
+  --space-wheel-gap: clamp(1rem, 5vw, 1.25rem);
+  --time-wheel-height: clamp(8rem, 36.5vw, 8.875rem);
 }
 
 :root[data-theme="dark"] {
@@ -64,7 +85,7 @@ body {
   color: var(--color-text-primary);
   font-family: var(--font-ui);
   font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
+  font-weight: var(--font-weight-regular);
 }
 
 button,
@@ -102,8 +123,8 @@ button {
   margin-inline: auto;
   color: var(--color-brand);
   font-family: var(--font-ui);
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: var(--type-size-title);
+  font-weight: var(--font-weight-semibold);
   letter-spacing: 0.02em;
   line-height: 1;
 }
@@ -122,8 +143,8 @@ button {
 
 .brand-kanji {
   color: var(--color-accent-secondary);
-  font-size: 1.65rem;
-  font-weight: 700;
+  font-size: var(--type-size-brand-mark);
+  font-weight: var(--font-weight-semibold);
   line-height: 1;
 }
 
@@ -169,15 +190,17 @@ button {
 
 .header-action:focus-visible,
 .session-reset-button:focus-visible,
-.tea-wisdom-close:focus-visible,
-.tea-wisdom-next:focus-visible {
+.tea-wisdom-next:focus-visible,
+.app-dialog-close:focus-visible,
+.settings-menu-content button:focus-visible,
+.about-dialog-content a:focus-visible {
   outline: 2px solid var(--color-accent-secondary);
   outline-offset: 3px;
 }
 
 .language-toggle {
-  font-size: 0.75rem;
-  font-weight: var(--ui-font-weight);
+  font-size: var(--type-size-meta);
+  font-weight: var(--font-weight-medium);
   letter-spacing: 0;
 }
 
@@ -200,7 +223,12 @@ button {
   color: var(--color-accent-secondary);
 }
 
-.tea-wisdom-dialog {
+.settings-menu-trigger svg {
+  width: 18px;
+  height: 18px;
+}
+
+.app-dialog {
   width: 100vw;
   max-width: none;
   height: 100dvh;
@@ -208,27 +236,40 @@ button {
   border: 0;
   margin: 0;
   padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
-  background: var(--color-bg-primary);
+  background: transparent;
   color: var(--color-text-primary);
 }
 
-.tea-wisdom-dialog[open] {
+.app-dialog[open] {
   display: grid;
   place-items: center;
   animation: wisdom-dialog-in 180ms ease-out;
 }
 
-.tea-wisdom-dialog::backdrop {
-  background: var(--color-bg-primary);
+.app-dialog::backdrop {
+  background: color-mix(in srgb, var(--color-bg-primary) 88%, transparent);
 }
 
-.tea-wisdom-close {
-  position: fixed;
-  top: max(18px, env(safe-area-inset-top));
-  right: max(18px, env(safe-area-inset-right));
+.app-dialog-panel {
+  position: relative;
+  width: min(100%, 380px);
+  max-height: calc(100dvh - max(48px, env(safe-area-inset-top) + env(safe-area-inset-bottom)));
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 28px;
+  background: var(--color-bg-elevated);
+  box-shadow: 0 18px 56px rgb(17 18 17 / 24%);
+}
+
+.app-dialog-close {
+  position: absolute;
+  z-index: 1;
+  top: 12px;
+  right: 12px;
   display: grid;
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   place-items: center;
   border: 1px solid var(--color-border);
   border-radius: 50%;
@@ -238,15 +279,20 @@ button {
   transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
 }
 
-.tea-wisdom-close:hover {
+.app-dialog-close:hover {
   border-color: var(--color-accent-secondary);
   background: var(--color-bg-elevated);
   transform: rotate(4deg);
 }
 
-.tea-wisdom-close svg {
-  width: 28px;
-  height: 28px;
+.app-dialog-close svg {
+  width: 24px;
+  height: 24px;
+}
+
+.tea-wisdom-panel {
+  width: min(100%, 680px);
+  padding: clamp(32px, 8vw, 64px);
 }
 
 .tea-wisdom-content {
@@ -258,15 +304,15 @@ button {
   margin: 0 0 24px;
   color: var(--color-accent-secondary);
   font-family: var(--font-ui);
-  font-size: clamp(3rem, 14vw, 5rem);
+  font-size: var(--type-size-wisdom-mark);
   line-height: 1;
 }
 
 .tea-wisdom-quote {
   margin: 0;
   font-family: var(--font-ui);
-  font-size: clamp(1.75rem, 7vw, 3.25rem);
-  font-weight: var(--ui-font-weight);
+  font-size: var(--type-size-wisdom-quote);
+  font-weight: var(--font-weight-medium);
   line-height: 1.3;
   text-wrap: balance;
 }
@@ -274,8 +320,8 @@ button {
 .tea-wisdom-author {
   margin: 24px 0 0;
   color: var(--color-text-secondary);
-  font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
+  font-size: var(--type-size-body);
+  font-weight: var(--font-weight-regular);
 }
 
 .tea-wisdom-next {
@@ -288,8 +334,8 @@ button {
   background: var(--color-accent-primary);
   color: var(--color-accent-contrast);
   cursor: pointer;
-  font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
+  font-size: var(--type-size-body);
+  font-weight: var(--font-weight-semibold);
   transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
 
@@ -306,9 +352,175 @@ button {
 .tea-wisdom-cooling-notice {
   margin: 36px 0 0;
   color: var(--color-accent-secondary);
-  font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
+  font-size: var(--type-size-body);
+  font-weight: var(--font-weight-medium);
   letter-spacing: 0;
+}
+
+.settings-menu-panel,
+.about-dialog-panel {
+  padding-top: 64px;
+}
+
+.settings-menu-content h2,
+.about-dialog-content h2 {
+  margin: 0;
+  font-size: var(--type-size-title);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+}
+
+.settings-menu-content {
+  display: grid;
+  gap: 18px;
+}
+
+.settings-menu-row {
+  display: grid;
+  gap: 9px;
+  color: var(--color-text-secondary);
+  font-size: var(--type-size-label);
+  font-weight: var(--font-weight-medium);
+}
+
+.settings-segmented-control {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 12px;
+  background: var(--color-bg-secondary);
+}
+
+.settings-segmented-control button,
+.settings-pour-control button,
+.settings-menu-link {
+  min-height: 44px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-size: var(--type-size-label);
+  font-weight: var(--font-weight-semibold);
+}
+
+.settings-segmented-control button[aria-pressed="true"] {
+  border-color: var(--color-accent-secondary);
+  background: var(--color-bg-elevated);
+  color: var(--color-accent-secondary);
+}
+
+.settings-pour-row {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.settings-pour-control {
+  display: grid;
+  grid-template-columns: 44px 48px 44px;
+  align-items: center;
+  gap: 6px;
+}
+
+.settings-pour-control button {
+  border-color: var(--color-border);
+  background: var(--color-bg-secondary);
+  font-size: 1.25rem;
+}
+
+.settings-pour-control button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.settings-pour-control output {
+  font-size: var(--type-size-title);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+}
+
+.settings-menu-separator {
+  height: 1px;
+  background: var(--color-border-soft);
+}
+
+.settings-menu-link {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-start;
+  padding-inline: 10px;
+  text-align: left;
+}
+
+.settings-menu-link:hover {
+  background: var(--color-bg-secondary);
+}
+
+.settings-menu-link svg {
+  width: 20px;
+  height: 20px;
+}
+
+.settings-menu-reset {
+  color: var(--color-danger);
+}
+
+.about-dialog-content {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.about-dialog-mark {
+  margin: 0;
+  color: var(--color-accent-secondary);
+  font-size: 3rem;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+}
+
+.about-dialog-content > p:not(.about-dialog-mark) {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-size-label);
+  line-height: 1.5;
+}
+
+.about-dialog-content dl {
+  display: grid;
+  width: 100%;
+  gap: 8px;
+  margin: 0;
+}
+
+.about-dialog-content dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.about-dialog-content dt {
+  color: var(--color-text-secondary);
+}
+
+.about-dialog-content dd {
+  margin: 0;
+  font-weight: var(--font-weight-semibold);
+}
+
+.about-dialog-content a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 8px;
+  color: var(--color-accent-secondary);
+  font-weight: var(--font-weight-semibold);
 }
 
 @keyframes wisdom-dialog-in {
@@ -321,7 +533,14 @@ button {
   gap: 0;
 }
 
-.time-carousel:focus-visible,
+.timer-primary-flow {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: var(--space-section);
+}
+
+.time-wheel:focus-visible,
 .control-button:focus-visible,
 .session-reset-popup-button:focus-visible,
 .app-footer a:focus-visible {
@@ -338,101 +557,115 @@ button {
   width: 100%;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-section);
 }
 
-.time-carousel {
-  display: flex;
-  width: 100%;
-  height: clamp(116px, 30vw, 132px);
-  align-items: center;
-  gap: 8px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  padding-inline: calc(50% - 52px);
-  scrollbar-width: none;
-  scroll-padding-inline: calc(50% - 52px);
-  scroll-snap-type: x mandatory;
-  touch-action: pan-x;
-  user-select: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.time-carousel.is-dragging {
-  cursor: grabbing;
-  scroll-snap-type: none;
-}
-
-.time-carousel::-webkit-scrollbar {
-  display: none;
-}
-
-.time-carousel-option {
+.time-wheel-picker {
   display: grid;
-  width: 104px;
-  height: 78px;
-  flex: 0 0 104px;
+  width: auto;
+  height: var(--time-wheel-height);
+  align-self: stretch;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--space-wheel-gap);
+  overflow: hidden;
+  margin-inline: var(--space-control-inline);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.time-wheel {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
   place-items: center;
-  border: 1px solid var(--color-border-soft);
+  overflow: hidden;
+  border: 1px solid var(--color-accent-secondary);
   border-radius: 14px;
   padding: 0;
-  background: var(--color-bg-secondary);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  opacity: 0.38;
-  scroll-snap-align: center;
-  scroll-snap-stop: always;
-  transform: scale(0.82);
-  transition: opacity 180ms ease, transform 220ms cubic-bezier(0.22, 0.75, 0.3, 1), background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 220ms ease;
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  box-shadow: 0 8px 24px rgb(26 37 29 / 12%);
+  cursor: ns-resize;
+  overscroll-behavior: contain;
+  touch-action: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  transition: transform 120ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 220ms ease;
 }
 
-.time-carousel-option span {
+.time-wheel:active {
+  transform: scale(0.985);
+}
+
+.time-wheel-value {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
   color: var(--color-text-primary);
-  font-size: clamp(1.8rem, 9vw, 2.4rem);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.time-wheel-number {
+  display: block;
+  font-size: var(--type-size-wheel);
   font-variant-numeric: tabular-nums;
   font-family: var(--font-ui);
-  font-weight: var(--ui-font-weight);
-  letter-spacing: -0.05em;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.08em;
   line-height: 1;
 }
 
-.time-carousel-option span.has-minutes {
-  font-size: clamp(1.55rem, 7.5vw, 2rem);
+.time-wheel-number.is-next {
+  animation: time-wheel-next 180ms cubic-bezier(0.22, 0.75, 0.3, 1);
 }
 
-.time-carousel-option.is-selected {
-  border-color: var(--color-accent-secondary);
-  background: var(--color-bg-elevated);
-  color: var(--color-text-primary);
-  opacity: 1;
-  box-shadow: 0 8px 24px rgb(26 37 29 / 12%);
-  transform: scale(1.12);
+.time-wheel-number.is-previous {
+  animation: time-wheel-previous 180ms cubic-bezier(0.22, 0.75, 0.3, 1);
+}
+
+.time-wheel-unit {
+  position: absolute;
+  top: 23%;
+  left: calc(50% + clamp(2rem, 9vw, 2.5rem));
+  font-family: var(--font-ui);
+  font-size: var(--type-size-wheel-unit);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+}
+
+@keyframes time-wheel-next {
+  from {
+    opacity: 0.2;
+    transform: translateY(45%);
+  }
+}
+
+@keyframes time-wheel-previous {
+  from {
+    opacity: 0.2;
+    transform: translateY(-45%);
+  }
 }
 
 .time-carousel-label {
   color: var(--color-text-secondary);
-  font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
+  font-size: var(--type-size-label);
+  font-weight: var(--font-weight-medium);
   letter-spacing: 0;
   line-height: 1;
-}
-
-.time-carousel-option.is-disabled {
-  border-color: var(--color-border-soft);
-  background: var(--color-bg-secondary);
-  cursor: not-allowed;
-  opacity: 0.28;
-}
-
-.time-carousel-option.is-disabled span {
-  color: var(--color-text-secondary);
 }
 
 .control-button {
   min-height: 48px;
   border-radius: 10px;
-  font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
+  font-size: var(--type-size-body);
+  font-weight: var(--font-weight-semibold);
   transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, opacity 160ms ease;
 }
 
@@ -468,7 +701,7 @@ button {
 }
 
 .timer-actions {
-  margin-top: clamp(32px, 4vh, 36px);
+  margin-top: 0;
 }
 
 .active-timer {
@@ -482,7 +715,7 @@ button {
   border: 1px solid var(--color-border-soft);
   border-radius: 11px;
   background: var(--color-panel-soft);
-  margin-top: clamp(28px, 3.5vh, 32px);
+  margin-top: 0;
 }
 
 .active-timer-progress {
@@ -514,10 +747,10 @@ button {
 .active-timer-digits {
   position: relative;
   color: var(--color-accent-secondary);
-  font-size: clamp(48px, 14vw, 54px);
+  font-size: var(--type-size-countdown);
   font-variant-numeric: tabular-nums;
   font-family: var(--font-ui);
-  font-weight: var(--ui-font-weight);
+  font-weight: var(--font-weight-medium);
   letter-spacing: -0.035em;
   line-height: 1;
   visibility: hidden;
@@ -535,14 +768,14 @@ button {
 .active-timer[data-phase="idle"] .active-timer-digits {
   visibility: visible;
   color: var(--color-text-secondary);
-  font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
+  font-size: var(--type-size-label);
+  font-weight: var(--font-weight-regular);
   letter-spacing: 0.01em;
 }
 
 .functional-block {
   width: auto;
-  margin-inline: clamp(12px, 4vw, 16px);
+  margin-inline: var(--space-control-inline);
 }
 
 .brew-counter-row {
@@ -554,21 +787,22 @@ button {
 }
 
 .brew-counter {
-  display: grid;
+  display: flex;
   width: 100%;
   min-height: 64px;
-  grid-template-columns: 36px minmax(0, 1fr) 36px;
   align-items: center;
+  justify-content: center;
   margin: 0;
   color: var(--color-brand);
-  font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
+  font-size: var(--type-size-counter-label);
+  font-weight: var(--font-weight-medium);
   line-height: 1;
   white-space: nowrap;
 }
 
 .brew-counter-content {
   display: grid;
+  width: min(100%, 280px);
   grid-template-columns: minmax(0, 1fr) 60px minmax(0, 1fr);
   align-items: center;
   gap: 14px;
@@ -592,18 +826,11 @@ button {
   border-radius: 10px;
   background: var(--color-bg-secondary);
   color: var(--color-accent-secondary);
-  font-size: 2rem;
+  font-size: var(--type-size-counter);
   font-variant-numeric: tabular-nums;
-  font-weight: var(--ui-font-weight);
+  font-weight: var(--font-weight-semibold);
   line-height: 1;
   text-align: center;
-}
-
-.brew-counter-adjust {
-  flex: 0 0 36px;
-  font-size: 1.25rem;
-  font-weight: var(--ui-font-weight);
-  line-height: 1;
 }
 
 .session-reset-button {
@@ -660,9 +887,9 @@ button {
 
 .session-reset-popup h2 {
   margin: 0;
-  font-size: clamp(1.75rem, 7vw, 2.5rem);
+  font-size: var(--type-size-dialog-title);
   font-family: var(--font-ui);
-  font-weight: var(--ui-font-weight);
+  font-weight: var(--font-weight-semibold);
   line-height: 1.2;
   text-wrap: balance;
 }
@@ -671,8 +898,8 @@ button {
   margin: 18px auto 0;
   max-width: 320px;
   color: var(--color-text-secondary);
-  font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
+  font-size: var(--type-size-body);
+  font-weight: var(--font-weight-regular);
   line-height: 1.55;
 }
 
@@ -687,8 +914,8 @@ button {
   min-height: 46px;
   border-radius: 999px;
   cursor: pointer;
-  font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
+  font-size: var(--type-size-body);
+  font-weight: var(--font-weight-semibold);
   transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
 }
 
@@ -729,8 +956,8 @@ button {
   margin-top: auto;
   padding-top: clamp(12px, 2.5vh, 24px);
   color: var(--color-footer);
-  font-size: var(--ui-font-size);
-  font-weight: var(--ui-font-weight);
+  font-size: var(--type-size-footer);
+  font-weight: var(--font-weight-medium);
   line-height: 1.4;
 }
 
@@ -752,7 +979,7 @@ button {
   justify-content: center;
   margin: 0;
   color: var(--color-accent-secondary);
-  font-size: 0.8125rem;
+  font-size: var(--type-size-footer);
   line-height: 1;
 }
 
@@ -799,8 +1026,10 @@ button {
     scroll-behavior: auto !important;
   }
 
-  .time-carousel-option {
+  .time-wheel,
+  .time-wheel-number {
     transition: none;
+    animation: none;
   }
 
   .header-action,

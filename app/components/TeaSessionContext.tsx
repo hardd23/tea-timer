@@ -15,6 +15,9 @@ import {
 interface TeaSessionContextValue {
   isTeaCoolingTooLong: boolean;
   setIsTeaCoolingTooLong: Dispatch<SetStateAction<boolean>>;
+  pourCount: number;
+  adjustPourCount: (amount: number) => void;
+  resetPourCount: () => void;
   registerSessionResetHandler: (handler: () => void) => () => void;
   requestSessionReset: () => void;
 }
@@ -23,7 +26,14 @@ const TeaSessionContext = createContext<TeaSessionContextValue | null>(null);
 
 export function TeaSessionProvider({ children }: { children: ReactNode }) {
   const [isTeaCoolingTooLong, setIsTeaCoolingTooLong] = useState(false);
+  const [pourCount, setPourCount] = useState(0);
   const sessionResetHandlerRef = useRef<(() => void) | null>(null);
+
+  const adjustPourCount = useCallback((amount: number) => {
+    setPourCount((currentCount) => Math.min(99, Math.max(0, currentCount + amount)));
+  }, []);
+
+  const resetPourCount = useCallback(() => setPourCount(0), []);
 
   const registerSessionResetHandler = useCallback((handler: () => void) => {
     sessionResetHandlerRef.current = handler;
@@ -43,10 +53,20 @@ export function TeaSessionProvider({ children }: { children: ReactNode }) {
     () => ({
       isTeaCoolingTooLong,
       setIsTeaCoolingTooLong,
+      pourCount,
+      adjustPourCount,
+      resetPourCount,
       registerSessionResetHandler,
       requestSessionReset,
     }),
-    [isTeaCoolingTooLong, registerSessionResetHandler, requestSessionReset],
+    [
+      adjustPourCount,
+      isTeaCoolingTooLong,
+      pourCount,
+      registerSessionResetHandler,
+      requestSessionReset,
+      resetPourCount,
+    ],
   );
 
   return (

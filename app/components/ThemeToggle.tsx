@@ -1,9 +1,9 @@
 'use client';
 
-import { useSyncExternalStore } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import { useLanguage } from './LanguageContext';
 
-type Theme = 'light' | 'dark';
+export type Theme = 'light' | 'dark';
 
 const THEME_STORAGE_KEY = 'tea-timer-theme';
 const THEME_CHANGE_EVENT = 'tea-timer-theme-change';
@@ -38,17 +38,24 @@ const getThemeSnapshot = (): Theme =>
 
 const getServerThemeSnapshot = (): Theme => 'light';
 
-export default function ThemeToggle() {
-  const { t } = useLanguage();
+export function useTheme() {
   const theme = useSyncExternalStore(
     subscribeToTheme,
     getThemeSnapshot,
     getServerThemeSnapshot,
   );
+  const setTheme = useCallback((nextTheme: Theme) => applyTheme(nextTheme), []);
+
+  return { theme, setTheme };
+}
+
+export default function ThemeToggle() {
+  const { t } = useLanguage();
+  const { theme, setTheme } = useTheme();
 
   const toggleTheme = () => {
     const nextTheme = theme === 'light' ? 'dark' : 'light';
-    applyTheme(nextTheme);
+    setTheme(nextTheme);
   };
 
   const nextThemeLabel = theme === 'light'

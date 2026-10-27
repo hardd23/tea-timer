@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import teaQuotesData from '../data/tea-quotes-popup-300.ru.json';
+import AppDialog from './AppDialog';
 import { useLanguage } from './LanguageContext';
 import { useTeaSession } from './TeaSessionContext';
 
@@ -44,39 +45,16 @@ function TeaQuotePopup({
   onNext,
 }: TeaQuotePopupProps) {
   const { t } = useLanguage();
-  const dialogRef = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-
-    if (isOpen && !dialog.open) {
-      dialog.showModal();
-    } else if (!isOpen && dialog.open) {
-      dialog.close();
-    }
-  }, [isOpen]);
 
   return (
-    <dialog
+    <AppDialog
       id="tea-wisdom-dialog"
-      ref={dialogRef}
-      className="tea-wisdom-dialog"
-      aria-labelledby="tea-wisdom-title"
-      onClose={onClose}
+      isOpen={isOpen}
+      labelledBy="tea-wisdom-title"
+      closeLabel={t('closeTeaWisdom')}
+      contentClassName="tea-wisdom-panel"
+      onRequestClose={onClose}
     >
-      <button
-        type="button"
-        className="tea-wisdom-close"
-        onClick={() => dialogRef.current?.close()}
-        aria-label={t('closeTeaWisdom')}
-        autoFocus
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-          <path d="M5 5l14 14M19 5 5 19" strokeLinecap="round" />
-        </svg>
-      </button>
-
       <div className="tea-wisdom-content">
         <p className="tea-wisdom-mark" aria-hidden="true">茶</p>
         <blockquote id="tea-wisdom-title" className="tea-wisdom-quote">
@@ -93,7 +71,7 @@ function TeaQuotePopup({
           </button>
         )}
       </div>
-    </dialog>
+    </AppDialog>
   );
 }
 

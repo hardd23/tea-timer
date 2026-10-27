@@ -2,11 +2,10 @@
 
 import TeaTimer from './components/TeaTimer';
 import { LanguageProvider, useLanguage } from './components/LanguageContext';
-import LanguageToggle from './components/LanguageToggle';
-import SessionResetButton from './components/SessionResetButton';
+import SettingsMenu from './components/SettingsMenu';
 import { TeaSessionProvider } from './components/TeaSessionContext';
 import TeaWisdom from './components/TeaWisdom';
-import ThemeToggle from './components/ThemeToggle';
+import { GITHUB_URL } from './app-info';
 
 function TeaTimerApp() {
   const { language, t } = useLanguage();
@@ -23,11 +22,9 @@ function TeaTimerApp() {
             </h1>
             <div className="header-action-stack header-action-stack-left">
               <TeaWisdom />
-              <SessionResetButton />
             </div>
             <div className="header-action-stack header-action-stack-right">
-              <ThemeToggle />
-              <LanguageToggle />
+              <SettingsMenu />
             </div>
           </header>
 
@@ -55,7 +52,7 @@ function TeaTimerApp() {
               {t('supportAuthor')}
             </a>
             <a
-              href="https://github.com/hardd23/tea-timer"
+              href={GITHUB_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="header-action footer-social-button footer-github"

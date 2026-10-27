@@ -34,12 +34,13 @@ const COOLING_PROGRESS_COLOR = '#72b7ff';
 const TeaTimer: React.FC = () => {
   const { language, t } = useLanguage();
   const {
+    adjustPourCount,
+    pourCount,
     registerSessionResetHandler,
+    resetPourCount,
     setIsTeaCoolingTooLong,
   } = useTeaSession();
   const [activeTimers, setActiveTimers] = useState<TimerInstance[]>([]);
-  const [completedTimers, setCompletedTimers] = useState<CompletedTimer[]>([]);
-  const [manualPourOffset, setManualPourOffset] = useState(0);
   const [durationSeconds, setDurationSeconds] = useState(10);
   const [currentDisplayTimerId, setCurrentDisplayTimerId] = useState<string | null>(null);
   const [isResetPopupOpen, setIsResetPopupOpen] = useState(false);
@@ -50,6 +51,7 @@ const TeaTimer: React.FC = () => {
   const progressColorRef = useRef(BREWING_PROGRESS_COLOR);
   const progressFrameRef = useRef<number | null>(null);
   const coolingStartedRef = useRef<Set<string>>(new Set());
+  const completedTimerIdsRef = useRef<Set<string>>(new Set());
 
   const currentDisplayTimer = activeTimers.find(
     (timer) => timer.id === currentDisplayTimerId,
@@ -97,7 +99,7 @@ const TeaTimer: React.FC = () => {
 
     const closePopup = (restoreFocus = false) => {
       setIsResetPopupOpen(false);
-      if (restoreFocus) document.getElementById('session-reset-button')?.focus();
+      if (restoreFocus) document.getElementById('settings-menu-button')?.focus();
     };
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
@@ -215,14 +217,11 @@ const TeaTimer: React.FC = () => {
   }, [setProgressBorderProgress]);
 
   const recordCompletedTimer = useCallback((timer: CompletedTimer) => {
-    setCompletedTimers((prevCompleted) => {
-      if (prevCompleted.some((completed) => completed.id === timer.id)) {
-        return prevCompleted;
-      }
+    if (completedTimerIdsRef.current.has(timer.id)) return;
 
-      return [...prevCompleted, { id: timer.id, label: timer.label }];
-    });
-  }, []);
+    completedTimerIdsRef.current.add(timer.id);
+    adjustPourCount(1);
+  }, [adjustPourCount]);
 
   const startCooling = useCallback((timer: CompletedTimer, overtimeSeconds: number) => {
     const { id: timerId } = timer;
@@ -484,104 +483,77 @@ const TeaTimer: React.FC = () => {
     }
 
     coolingStartedRef.current.clear();
+    completedTimerIdsRef.current.clear();
     setActiveTimers([]);
-    setCompletedTimers([]);
-    setManualPourOffset(0);
+    resetPourCount();
+    setDurationSeconds(10);
     setCurrentDisplayTimerId(null);
     setIsTeaCoolingTooLong(false);
     setProgressBorderProgress(0, BREWING_PROGRESS_COLOR);
     setIsResetPopupOpen(false);
   };
 
-  const completedCount = Math.min(
-    99,
-    Math.max(0, completedTimers.length + manualPourOffset),
-  );
-
-  const adjustPourCount = (amount: number) => {
-    setManualPourOffset((currentOffset) =>
-      Math.min(
-        99 - completedTimers.length,
-        Math.max(-completedTimers.length, currentOffset + amount),
-      ),
-    );
-  };
-
   return (
     <section className="timer-stack flex w-full flex-col" aria-label={t('teaTimerControls')}>
-      <div
-        className={`timer-setting transition-[opacity,transform] duration-300 motion-reduce:transition-none ${
-          isBrewingActive ? 'scale-[0.96] opacity-55' : 'opacity-100'
-        }`}
-      >
-        <TimeCarousel value={durationSeconds} onChange={setDurationSeconds} />
-      </div>
+      <div className="timer-primary-flow">
+        <div
+          className={`timer-setting transition-[opacity,transform] duration-300 motion-reduce:transition-none ${
+            isBrewingActive ? 'scale-[0.96] opacity-55' : 'opacity-100'
+          }`}
+        >
+          <TimeCarousel value={durationSeconds} onChange={setDurationSeconds} />
+        </div>
 
-      <div className="functional-block timer-actions grid w-full grid-cols-3 gap-3">
-        <button
-          type="button"
-          onClick={() => currentDisplayTimer && handleStopTimer(currentDisplayTimer)}
-          className="control-button control-button-secondary"
-          disabled={!currentDisplayTimer}
-        >
-          {t('stop')}
-        </button>
-        <button
-          type="button"
-          onClick={handleStartTimer}
-          className="control-button control-button-primary col-span-2"
-          disabled={isBrewingActive}
-        >
-          {t('start')}
-        </button>
-      </div>
+        <div className="functional-block timer-actions grid w-full grid-cols-3 gap-3">
+          <button
+            type="button"
+            onClick={() => currentDisplayTimer && handleStopTimer(currentDisplayTimer)}
+            className="control-button control-button-secondary"
+            disabled={!currentDisplayTimer}
+          >
+            {t('stop')}
+          </button>
+          <button
+            type="button"
+            onClick={handleStartTimer}
+            className="control-button control-button-primary col-span-2"
+            disabled={isBrewingActive || durationSeconds === 0}
+          >
+            {t('start')}
+          </button>
+        </div>
 
-      <div
-        className="functional-block active-timer"
-        data-phase={hasActiveCountdown ? currentDisplayTimer?.timerPhase : 'idle'}
-      >
-        <canvas ref={progressCanvasRef} className="active-timer-progress" aria-hidden="true" />
-        <output
-          className="active-timer-digits"
-          aria-label={
-            hasActiveCountdown && currentDisplayTimer
-              ? currentDisplayTimer.timerPhase === 'cooling'
-                ? `${formatTime(currentDisplayTimer.timeLeft)} ${t('overtime')}`
-                : `${formatTime(currentDisplayTimer.timeLeft)} ${t('remaining')}`
-              : t('noActiveTimers')
-          }
+        <div
+          className="functional-block active-timer"
+          data-phase={hasActiveCountdown ? currentDisplayTimer?.timerPhase : 'idle'}
         >
-          {hasActiveCountdown && currentDisplayTimer
-            ? formatTime(currentDisplayTimer.timeLeft)
-            : t('noActiveTimers')}
-        </output>
+          <canvas ref={progressCanvasRef} className="active-timer-progress" aria-hidden="true" />
+          <output
+            className="active-timer-digits"
+            aria-label={
+              hasActiveCountdown && currentDisplayTimer
+                ? currentDisplayTimer.timerPhase === 'cooling'
+                  ? `${formatTime(currentDisplayTimer.timeLeft)} ${t('overtime')}`
+                  : `${formatTime(currentDisplayTimer.timeLeft)} ${t('remaining')}`
+                : t('noActiveTimers')
+            }
+          >
+            {hasActiveCountdown && currentDisplayTimer
+              ? formatTime(currentDisplayTimer.timeLeft)
+              : t('noActiveTimers')}
+          </output>
+        </div>
       </div>
 
       <div className="functional-block brew-counter-row">
         <p className="brew-counter" aria-live="polite" aria-atomic="true">
-          <button
-            type="button"
-            className="header-action brew-counter-adjust"
-            onClick={() => adjustPourCount(-1)}
-            aria-label={t('decreasePourCount')}
-          >
-            <span aria-hidden="true">−</span>
-          </button>
           <span className="brew-counter-content">
-            <span>{getPourVerb(completedCount)}</span>
+            <span>{getPourVerb(pourCount)}</span>
             <output className="brew-counter-value">
-              {completedCount}
+              {pourCount}
             </output>
-            <span>{getPourWord(completedCount)}</span>
+            <span>{getPourWord(pourCount)}</span>
           </span>
-          <button
-            type="button"
-            className="header-action brew-counter-adjust"
-            onClick={() => adjustPourCount(1)}
-            aria-label={t('increasePourCount')}
-          >
-            <span aria-hidden="true">+</span>
-          </button>
         </p>
       </div>
 
@@ -596,9 +568,9 @@ const TeaTimer: React.FC = () => {
         aria-describedby="session-reset-description"
       >
         <div className="session-reset-popup-content">
-          <h2 id="session-reset-title">{t('resetTitle')}</h2>
+          <h2 id="session-reset-title">{t('resetTeaSessionTitle')}</h2>
           <p id="session-reset-description">
-            {t('resetDescription')}
+            {t('resetTeaSessionDescription')}
           </p>
           <div className="session-reset-popup-actions">
             <button
@@ -606,7 +578,7 @@ const TeaTimer: React.FC = () => {
               className="session-reset-popup-button session-reset-cancel"
               onClick={() => {
                 setIsResetPopupOpen(false);
-                document.getElementById('session-reset-button')?.focus();
+                document.getElementById('settings-menu-button')?.focus();
               }}
               autoFocus
             >
