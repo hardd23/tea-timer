@@ -1,19 +1,39 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useSyncExternalStore } from 'react';
 import { APP_VERSION, GITHUB_URL } from '../app-info';
+import {
+  checkForAppUpdate,
+  isUpdateCheckAvailable,
+} from '../lib/app-update';
 import AppDialog from './AppDialog';
 import { useLanguage } from './LanguageContext';
 import { useTeaSession } from './TeaSessionContext';
 import { useTheme } from './ThemeToggle';
+
+type UpdateCheckState =
+  | { status: 'idle' | 'checking' | 'current' | 'error' }
+  | { status: 'available'; version: string; releaseUrl: string };
+
+const subscribeToPlatform = () => () => {};
+const getUpdateCheckSnapshot = () => isUpdateCheckAvailable();
+const getServerUpdateCheckSnapshot = () => false;
 
 export default function SettingsMenu() {
   const { language, setLanguage, t } = useLanguage();
   const { adjustPourCount, pourCount, requestSessionReset } = useTeaSession();
   const { theme, setTheme } = useTheme();
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const isCheckingUpdatesRef = useRef(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isUpdateOpen, setIsUpdateOpen] = useState(false);
+  const [updateState, setUpdateState] = useState<UpdateCheckState>({ status: 'idle' });
+  const canCheckForUpdates = useSyncExternalStore(
+    subscribeToPlatform,
+    getUpdateCheckSnapshot,
+    getServerUpdateCheckSnapshot,
+  );
 
   const openAbout = () => {
     setIsMenuOpen(false);
@@ -24,6 +44,40 @@ export default function SettingsMenu() {
     setIsMenuOpen(false);
     window.setTimeout(requestSessionReset, 0);
   };
+
+  const checkForUpdates = async () => {
+    if (isCheckingUpdatesRef.current) return;
+
+    isCheckingUpdatesRef.current = true;
+    setIsMenuOpen(false);
+    setIsUpdateOpen(true);
+    setUpdateState({ status: 'checking' });
+
+    try {
+      const result = await checkForAppUpdate();
+      setUpdateState(result.updateAvailable
+        ? {
+            status: 'available',
+            version: result.latestVersion,
+            releaseUrl: result.releaseUrl,
+          }
+        : { status: 'current' });
+    } catch {
+      setUpdateState({ status: 'error' });
+    } finally {
+      isCheckingUpdatesRef.current = false;
+    }
+  };
+
+  const updateMessage = updateState.status === 'checking'
+    ? t('checkingForUpdates')
+    : updateState.status === 'current'
+      ? t('latestVersionInstalled')
+      : updateState.status === 'available'
+        ? `${t('updateAvailable')} ${updateState.version}`
+        : updateState.status === 'error'
+          ? t('updateCheckFailed')
+          : '';
 
   return (
     <>
@@ -99,6 +153,20 @@ export default function SettingsMenu() {
             {t('aboutTeaTimer')}
           </button>
 
+          {canCheckForUpdates ? (
+            <button
+              type="button"
+              className="settings-menu-link"
+              onClick={() => void checkForUpdates()}
+              disabled={updateState.status === 'checking'}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                <path d="M20 11a8 8 0 0 0-14.8-4M4 4v5h5M4 13a8 8 0 0 0 14.8 4M20 20v-5h-5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {t('checkForUpdates')}
+            </button>
+          ) : null}
+
           <div className="settings-menu-separator" />
 
           <button
@@ -109,6 +177,41 @@ export default function SettingsMenu() {
           >
             {t('resetTeaSession')}
           </button>
+        </div>
+      </AppDialog>
+
+      <AppDialog
+        id="update-check-dialog"
+        isOpen={isUpdateOpen}
+        labelledBy="update-check-title"
+        closeLabel={t('closeUpdateCheck')}
+        contentClassName="update-dialog-panel"
+        onRequestClose={() => setIsUpdateOpen(false)}
+        returnFocusRef={triggerRef}
+      >
+        <div className="update-dialog-content">
+          <svg
+            className={updateState.status === 'checking' ? 'update-dialog-icon is-checking' : 'update-dialog-icon'}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            aria-hidden="true"
+          >
+            <path d="M20 11a8 8 0 0 0-14.8-4M4 4v5h5M4 13a8 8 0 0 0 14.8 4M20 20v-5h-5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <h2 id="update-check-title">{t('updateCheckTitle')}</h2>
+          <p role="status" aria-live="polite">{updateMessage}</p>
+          {updateState.status === 'available' ? (
+            <a
+              className="update-dialog-download"
+              href={updateState.releaseUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t('downloadUpdate')}
+            </a>
+          ) : null}
         </div>
       </AppDialog>
 

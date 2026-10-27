@@ -193,7 +193,8 @@ button {
 .tea-wisdom-next:focus-visible,
 .app-dialog-close:focus-visible,
 .settings-menu-content button:focus-visible,
-.about-dialog-content a:focus-visible {
+.about-dialog-content a:focus-visible,
+.update-dialog-content a:focus-visible {
   outline: 2px solid var(--color-accent-secondary);
   outline-offset: 3px;
 }
@@ -358,7 +359,8 @@ button {
 }
 
 .settings-menu-panel,
-.about-dialog-panel {
+.about-dialog-panel,
+.update-dialog-panel {
   padding-top: 64px;
 }
 
@@ -521,6 +523,59 @@ button {
   border-radius: 8px;
   color: var(--color-accent-secondary);
   font-weight: var(--font-weight-semibold);
+}
+
+.update-dialog-content {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  text-align: center;
+}
+
+.update-dialog-content h2,
+.update-dialog-content p {
+  margin: 0;
+}
+
+.update-dialog-content h2 {
+  font-size: var(--type-size-title);
+  font-weight: var(--font-weight-semibold);
+}
+
+.update-dialog-content p {
+  color: var(--color-text-secondary);
+  font-size: var(--type-size-body);
+  line-height: 1.5;
+}
+
+.update-dialog-icon {
+  width: 40px;
+  height: 40px;
+  color: var(--color-accent-secondary);
+}
+
+.update-dialog-icon.is-checking {
+  animation: update-dialog-spin 900ms linear infinite;
+}
+
+.update-dialog-download {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding-inline: 18px;
+  background: var(--color-accent-primary);
+  color: var(--color-accent-contrast);
+  font-size: var(--type-size-body);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+}
+
+@keyframes update-dialog-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes wisdom-dialog-in {
@@ -1036,7 +1091,8 @@ button {
   }
 
   .time-wheel,
-  .time-wheel-number {
+  .time-wheel-number,
+  .update-dialog-icon.is-checking {
     transition: none;
     animation: none;
   }
