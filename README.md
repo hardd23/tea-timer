@@ -1,113 +1,113 @@
-<h1 align="center">Tea Timer · Чайный таймер</h1>
+<h1 align="center">Tea Timer · Tea Brewing Timer</h1>
 
 <p align="center">
-  <strong>Небольшой таймер для вдумчивого чаепития.</strong><br>
-  Выберите время, заварите чай и не дайте ему остыть.
+  <strong>A small timer for mindful tea drinking.</strong><br>
+  Choose a time, brew your tea, and do not let it get cold.
 </p>
 
 <p align="center">
-  <a href="https://hardd23.github.io/tea-timer/"><strong>Сайт приложения</strong></a>
+  <a href="https://hardd23.github.io/tea-timer/"><strong>App Website</strong></a>
   &nbsp;·&nbsp;
-  <a href="https://my-tea-timer.vercel.app/"><strong>Открыть таймер</strong></a>
+  <a href="https://my-tea-timer.vercel.app/"><strong>Open Timer</strong></a>
   &nbsp;·&nbsp;
-  <a href="https://github.com/hardd23/tea-timer/releases/latest"><strong>Скачать для Android</strong></a>
+  <a href="https://github.com/hardd23/tea-timer/releases/latest"><strong>Download for Android</strong></a>
 </p>
 
 <p align="center">
-  <a href="https://hardd23.github.io/tea-timer/"><img src="https://img.shields.io/badge/Сайт-GitHub_Pages-327452?style=flat-square" alt="Сайт приложения на GitHub Pages"></a>
-  <a href="https://my-tea-timer.vercel.app/"><img src="https://img.shields.io/badge/Веб--версия-Открыть-2e7d32?style=flat-square" alt="Открыть веб-версию"></a>
-  <a href="https://github.com/hardd23/tea-timer/releases/latest"><img src="https://img.shields.io/badge/Android-APK-3ddc84?style=flat-square&amp;logo=android&amp;logoColor=white" alt="Скачать Android APK"></a>
-  <a href="https://github.com/hardd23/tea-timer/releases/tag/v1.1.1"><img src="https://img.shields.io/badge/Версия-1.1.1-397b59?style=flat-square" alt="Версия 1.1.1"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/Лицензия-MIT-5f6b61?style=flat-square" alt="Лицензия MIT"></a>
+  <a href="https://hardd23.github.io/tea-timer/"><img src="https://img.shields.io/badge/Website-GitHub_Pages-327452?style=flat-square" alt="App website on GitHub Pages"></a>
+  <a href="https://my-tea-timer.vercel.app/"><img src="https://img.shields.io/badge/Web--version-Open-2e7d32?style=flat-square" alt="Open the web version"></a>
+  <a href="https://github.com/hardd23/tea-timer/releases/latest"><img src="https://img.shields.io/badge/Android-APK-3ddc84?style=flat-square&amp;logo=android&amp;logoColor=white" alt="Download the Android APK"></a>
+  <a href="https://github.com/hardd23/tea-timer/releases/tag/v1.1.1"><img src="https://img.shields.io/badge/Version-1.1.1-397b59?style=flat-square" alt="Version 1.1.1"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-5f6b61?style=flat-square" alt="MIT License"></a>
 </p>
 
-## Интерфейс Tea Timer
+## Tea Timer Interface
 
 <p align="center">
-  <img src="./assets/readme/screenshots/tea-timer-idle.png" width="218" alt="Tea Timer — выбор минут и секунд до запуска">
+  <img src="./assets/readme/screenshots/tea-timer-idle.png" width="218" alt="Tea Timer — selecting minutes and seconds before starting">
   &nbsp;
-  <img src="./assets/readme/screenshots/tea-timer-brewing.png" width="218" alt="Tea Timer — обратный отсчёт времени заваривания">
+  <img src="./assets/readme/screenshots/tea-timer-brewing.png" width="218" alt="Tea Timer — brewing countdown">
   &nbsp;
-  <img src="./assets/readme/screenshots/tea-timer-cooling.png" width="218" alt="Tea Timer — время остывания и счётчик проливов">
+  <img src="./assets/readme/screenshots/tea-timer-cooling.png" width="218" alt="Tea Timer — cooling time and infusion counter">
 </p>
 
 <p align="center">
-  <sub>Выбор времени · Заваривание · Остывание после нуля</sub>
+  <sub>Time selection · Brewing · Cooling after zero</sub>
 </p>
 
 <details>
-  <summary><strong>Ещё экраны: чайные высказывания и настройки</strong></summary>
+  <summary><strong>More screens: tea sayings and settings</strong></summary>
   <br>
   <p align="center">
-    <img src="./assets/readme/screenshots/tea-timer-wisdom.png" width="218" alt="Tea Timer — чайное высказывание">
+    <img src="./assets/readme/screenshots/tea-timer-wisdom.png" width="218" alt="Tea Timer — tea saying">
     &nbsp;
-    <img src="./assets/readme/screenshots/tea-timer-settings.png" width="218" alt="Tea Timer — настройки темы, языка и проливов">
+    <img src="./assets/readme/screenshots/tea-timer-settings.png" width="218" alt="Tea Timer — theme, language, and infusion settings">
   </p>
 </details>
 
-## Что умеет
+## Features
 
-| | Возможность |
+| | Feature |
 | --- | --- |
-| ⏳ | Независимые вертикальные барабаны минут и секунд с точным управлением жестом, колесом мыши или клавиатурой. |
-| 🍵 | Две фазы таймера: заваривание до нуля и отсчёт остывания после него. |
-| 🔢 | Счётчик проливов с автоматическим учётом и ручной корректировкой в настройках — до 99. |
-| 🌗 | Светлая и тёмная темы, которые запоминаются на устройстве. |
-| RU / EN | Русский и английский интерфейс без перезагрузки страницы. |
-| 💬 | 315 чайных высказываний в случайном порядке. |
-| ↻ | Проверка обновлений Android-приложения через GitHub Releases. |
+| ⏳ | Independent vertical minute and second wheels with precise gesture, mouse wheel, or keyboard control. |
+| 🍵 | Two timer phases: brewing until zero and cooling time after it. |
+| 🔢 | Infusion counter with automatic tracking and manual adjustment in settings — up to 99. |
+| 🌗 | Light and dark themes that are remembered on the device. |
+| RU / EN | Russian and English interfaces without reloading the page. |
+| 💬 | 315 tea sayings in random order. |
+| ↻ | Android app update checks through GitHub Releases. |
 
-## Что нового в 1.1.1
+## What Is New in 1.1.1
 
-- Единое меню настроек для темы, языка, счётчика проливов, сведений о приложении и сброса чаепития.
-- Новые вертикальные барабаны выбора времени с более спокойной и точной прокруткой.
-- Проверка обновлений Android-приложения и переход к странице нового релиза.
-- Улучшенная адаптивность и типографика интерфейса.
-- Исправлены лишняя рамка фокуса и независимый переход секунд между `50` и `00`.
+- A unified settings menu for the theme, language, infusion counter, app information, and resetting the tea session.
+- New vertical time selection wheels with calmer and more precise scrolling.
+- Android app update checks and navigation to the new release page.
+- Improved interface responsiveness and typography.
+- Fixed an unnecessary focus outline and independent seconds transition between `50` and `00`.
 
-## Как это работает
+## How It Works
 
-1. Выберите минуты и секунды на вертикальных барабанах и нажмите «Старт».
-2. Во время заваривания граница таймера показывает ход отсчёта.
-3. Когда время выйдет, таймер автоматически перейдёт в режим остывания, а счётчик добавит пролив.
-4. Откройте настройки и выберите «Сбросить чаепитие», чтобы начать заново.
+1. Select minutes and seconds on the vertical wheels and press “Start.”
+2. During brewing, the timer border shows the countdown progress.
+3. When time runs out, the timer automatically switches to cooling mode, and the counter adds an infusion.
+4. Open settings and select “Reset tea session” to start over.
 
-Таймер использует точное время окончания, поэтому восстанавливает корректный результат после сворачивания вкладки или блокировки экрана.
+The timer uses the exact end time, so it restores the correct result after the tab is minimized or the screen is locked.
 
-## Открыть или установить
+## Open or Install
 
-### Сайт приложения
+### App Website
 
-[**Tea Timer на GitHub Pages**](https://hardd23.github.io/tea-timer/) — лендинг проекта с описанием возможностей, иллюстрациями интерфейса, инструкцией по установке и ссылками на актуальный Android-релиз и веб-версию.
+[**Tea Timer on GitHub Pages**](https://hardd23.github.io/tea-timer/) — the project landing page with a feature overview, interface images, installation instructions, and links to the latest Android release and web version.
 
-### Веб-версия
+### Web Version
 
-Откройте [my-tea-timer.vercel.app](https://my-tea-timer.vercel.app/) в современном браузере на телефоне или компьютере.
+Open [my-tea-timer.vercel.app](https://my-tea-timer.vercel.app/) in a modern browser on your phone or computer.
 
 ### Android
 
-Скачайте актуальный файл `Tea-Timer-*.apk` со страницы [Releases](https://github.com/hardd23/tea-timer/releases/latest), откройте его на Android-устройстве и подтвердите установку. APK подписан постоянным ключом приложения, поэтому следующие версии можно устанавливать поверх предыдущих.
+Download the latest `Tea-Timer-*.apk` file from the [Releases](https://github.com/hardd23/tea-timer/releases/latest) page, open it on your Android device, and confirm the installation. The APK is signed with the app's permanent key, so future versions can be installed over previous ones.
 
-> Android может попросить разрешить установку приложений из этого источника — это стандартное системное сообщение для APK, скачанных не из Google Play.
+> Android may ask you to allow app installation from this source — this is a standard system message for APK files downloaded outside Google Play.
 
-## Стек
+## Tech Stack
 
-- [Next.js](https://nextjs.org/) 16 · статический экспорт
+- [Next.js](https://nextjs.org/) 16 · static export
 - [React](https://react.dev/) 19 · [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/) 4
 - [Capacitor](https://capacitorjs.com/) 8 · Android
-- [Vercel](https://vercel.com/) · веб-публикация
-- [GitHub Pages](https://pages.github.com/) · лендинг проекта
+- [Vercel](https://vercel.com/) · web deployment
+- [GitHub Pages](https://pages.github.com/) · project landing page
 
-## Ссылки
+## Links
 
-- [Лендинг Tea Timer](https://hardd23.github.io/tea-timer/)
-- [Веб-версия](https://my-tea-timer.vercel.app/)
-- [Android-релизы](https://github.com/hardd23/tea-timer/releases)
+- [Tea Timer landing page](https://hardd23.github.io/tea-timer/)
+- [Web version](https://my-tea-timer.vercel.app/)
+- [Android releases](https://github.com/hardd23/tea-timer/releases)
 - [Telegram @hardd23](https://t.me/hardd23)
-- [GitHub-репозиторий](https://github.com/hardd23/tea-timer)
-- [Угостить автора чаем](https://web.tribute.tg/d/OyG)
+- [GitHub repository](https://github.com/hardd23/tea-timer)
+- [Buy the author tea](https://web.tribute.tg/d/OyG)
 
-## Лицензия
+## License
 
-Исходный код распространяется по [лицензии MIT](./LICENSE). Атрибуция визуальных материалов и чайных высказываний указана в [NOTICE.md](./NOTICE.md).
+The source code is distributed under the [MIT License](./LICENSE). Attribution for visual materials and tea sayings is provided in [NOTICE.md](./NOTICE.md).
