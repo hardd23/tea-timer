@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#111c17">
+  <meta name="theme-color" content="#111311">
   <meta name="description" content="Tea Timer — чайный таймер для Android. Точный отсчёт заваривания, контроль остывания, счётчик проливов и 315 чайных мыслей. Скачать APK бесплатно.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Tea Timer — искусство не спешить">
-  <meta property="og:description" content="Лаконичный чайный таймер для Android и браузера. Заваривайте в своём ритме.">
+  <meta property="og:description" content="Чайный таймер для Android и браузера: точный отсчёт, остывание, проливы. Смотрите реальные экраны и скачивайте APK бесплатно.">
   <title>Tea Timer — искусство не спешить</title>
   <style>
     :root {
@@ -219,6 +219,135 @@
       .download-actions .text-link { margin-top: 20px; }
     }
     @media(prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .button,.nav a { transition: none; } }
+
+    /* Visual language aligned with the real Tea Timer Android interface. */
+    :root {
+      color-scheme: dark;
+      --forest: #101310;
+      --forest-2: #1b241d;
+      --leaf: #85d98a;
+      --leaf-deep: #2c813a;
+      --cream: #141814;
+      --paper: #202520;
+      --ink: #e9eee8;
+      --muted: #a7b1a7;
+      --border: #354037;
+      --line-dark: rgba(225,244,224,.12);
+      --gold: #bcd9ad;
+    }
+    body { background: var(--cream); }
+    .masthead { background: radial-gradient(circle at 77% 44%,#263b2b 0,transparent 39%), radial-gradient(circle at 10% 6%,#1a281c 0,transparent 38%),#101310; }
+    .brand { gap: 4px; font-size: 19px; font-weight: 650; letter-spacing: -.05em; }
+    .brand b { color: #7fe18a; font-size: 30px; }
+    .nav { gap: 29px; }
+    .nav a { color: #bdcabd; }
+    .nav .nav-cta { border-color: #5c9564; color: #e6f5e6; }
+    .hero { grid-template-columns: minmax(0,1.05fr) minmax(380px,.95fr); min-height: 737px; padding-block: 58px 78px; }
+    .hero-desc { color: #b3c2b4; }
+    .button, .download-actions .button { background: #2c813a; color: #fff; border-radius: 9px; }
+    .button:hover, .download-actions .button:hover { background: #369747; box-shadow: 0 10px 34px rgba(70,170,82,.17); }
+    .hero-footnote { color: #95aa97; }
+    .visual { min-height: 615px; }
+    .visual::before { border-color: rgba(136,206,138,.12); box-shadow: 0 0 0 62px rgba(136,206,138,.03),0 0 0 123px rgba(136,206,138,.018); }
+    .phone-screenshot { position: relative; z-index: 1; width: 292px; aspect-ratio: 395/857; overflow: hidden; background: #101110; border: 7px solid #303931; border-radius: 31px; box-shadow: 0 33px 69px rgba(0,0,0,.55), inset 0 0 0 1px #657268; transform: rotate(-3deg); }
+    .phone-screenshot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .float-note { border-color: rgba(143,207,151,.22); background: rgba(32,44,34,.95); }
+    .float-note strong { color: #edf6eb; }
+    .note-top { top: 65px; right: -4px; }
+    .note-bottom { left: -6px; bottom: 75px; }
+    .hero-caption { right: 9px; bottom: 0; color: #a3b7a4; }
+    .transition-bar { background: #19241b; }
+    .transition-inner div { color: #cadaca; }
+    .transition-inner b { color: #89d48f; }
+    .section-kicker { color: #8bd391; }
+    .section p { color: #acb6ac; }
+    .story-head h2, .details h2, .download-heading h2 { color: #f2f4ef; }
+    .panel { border-color: #374138; background: #1e231e; }
+    .panel-large { background: linear-gradient(140deg,#243329,#1a241d); }
+    .panel-number { color: #88c991; }
+    .panel h3 { color: #f0f4ef; }
+    .panel p { color: #afbeb0; }
+    .phase-row { color: #b8cdb9; }
+    .phase-row strong { color: #a0e5a4; }
+    .phase-hints { color: #94a995; }
+    .phase-line span:first-child { background: #348942; }
+    .phase-line span:last-child { background: linear-gradient(90deg,#7fc989,#b4c28b); }
+    .counter-panel { background: #1d3022; border-color: #345039; }
+    .counter-panel p { color: #b6c8b5; }
+    .quote-panel { background: #252925; }
+    .quote-panel .quote-mark { color: #3b4d3e; }
+    .details { background: #181d19; }
+    .details-grid .mini { background: #252b25; border-color: #384439; }
+    .mini-icon { color: #85d98a; }
+    .mini h3 { color: #f0f4ee; }
+    .mini p { color: #aebaae; }
+    .steps li { border-top-color: #435045; }
+    .steps li:not(:last-child)::after { background: var(--cream); color: #89d18b; }
+    .step-num { color: #8cce91; }
+    .steps h3 { color: #f0f3ed; }
+    .steps p { color: #acb9ad; }
+    .download-actions .text-link { color: #9fe1a2; border-bottom-color: #4f8055; }
+    .closing { background: #1b281e; }
+    .footer { background: #101510; }
+    .footer-links a { color: #b4c8b6; }
+    .preview { padding: 100px 0 110px; background: #171c18; border-top: 1px solid #263128; border-bottom: 1px solid #28352a; }
+    .screens-heading { display: grid; grid-template-columns: 1.15fr .85fr; gap: 60px; align-items: end; margin-bottom: 42px; }
+    .screens-heading h2 { margin-bottom: 0; color: #f1f5ef; }
+    .screens-heading h2 em { font-weight: 400; color: #89d58f; }
+    .screens-heading > p { max-width: 365px; margin: 0 0 5px auto; }
+    .screens-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 17px; }
+    .screen-card { min-width: 0; margin: 0; padding: 15px 15px 23px; background: #242a24; border: 1px solid #3a453b; border-radius: 18px; box-shadow: 0 18px 45px rgba(0,0,0,.1); }
+    .screen-stage { display: grid; place-items: start center; overflow: hidden; padding: 10px 8px 0; background: #101310; border: 1px solid #343c35; border-radius: 12px; }
+    .screen-stage img { display: block; width: min(100%,202px); height: auto; }
+    .screen-card figcaption { padding: 21px 7px 0; }
+    .screen-index { display: block; color: #92d397; font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: .13em; margin-bottom: 10px; }
+    .screen-card strong { display: block; color: #f0f3ed; font-size: 17px; line-height: 1.35; }
+    .screen-card p { margin: 8px 0 0; font-size: 13px; line-height: 1.65; color: #aeb8ac; }
+    .screens-action { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 38px; color: #b9c9b8; font-size: 14px; }
+    .screens-action a { display: inline-flex; min-height: 44px; align-items: center; gap: 7px; padding: 10px 18px; border-radius: 8px; background: #2c813a; color: #fff; font-weight: 700; text-decoration: none; }
+    .screens-action a:hover { background: #389748; }
+    @media (max-width: 970px) {
+      .hero { grid-template-columns: 1fr; }
+      .visual { min-height: 660px; }
+      .note-top { right: 16px; }
+      .note-bottom { left: 10px; }
+      .screens-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .screen-stage img { width: min(100%,225px); }
+      .screens-heading { gap: 26px; }
+    }
+    @media (max-width: 700px) {
+      .nav a:nth-child(2) { display: none; }
+      .screens-heading { grid-template-columns: 1fr; gap: 20px; }
+      .screens-heading > p { max-width: 550px; margin: 0; }
+      .preview { padding: 75px 0 80px; }
+      .screen-card { padding: 12px 12px 21px; }
+      .screens-action { flex-wrap: wrap; text-align: center; }
+    }
+    @media (max-width: 520px) {
+      .nav a:nth-child(3) { display: none; }
+      .brand { font-size: 17px; }
+      .brand b { font-size: 26px; }
+      .hero { padding-top: 46px; padding-bottom: 56px; }
+      .visual { min-height: 555px; transform: none; margin-block: 5px 0; }
+      .phone-screenshot { width: 245px; }
+      .visual::before { width: 350px; height: 350px; box-shadow: 0 0 0 35px rgba(136,206,138,.025); }
+      .visual::after { width: 285px; height: 285px; }
+      .note-top, .note-bottom { display: none; }
+      .hero-caption { bottom: 1px; left: 0; right: 0; }
+      .screens-grid { grid-template-columns: 1fr; gap: 12px; }
+      .screen-card { display: grid; grid-template-columns: minmax(0,45%) 1fr; gap: 17px; align-items: center; padding: 12px; }
+      .screen-stage { height: 280px; padding: 8px 6px 0; }
+      .screen-stage img { width: min(100%,133px); }
+      .screen-card figcaption { padding: 0 3px 0 0; }
+      .screen-card strong { font-size: 16px; }
+      .screen-card p { font-size: 12px; }
+    }
+    @media (max-width: 370px) {
+      .brand { font-size: 15px; }
+      .brand b { font-size: 23px; }
+      .screen-card { gap: 11px; }
+      .screen-index { letter-spacing: .06em; font-size: 10px; }
+    }
   </style>
 </head>
 <body>
@@ -226,8 +355,9 @@
   <div class="masthead" id="top">
     <header class="wrap">
       <nav class="topbar" aria-label="Основная навигация">
-        <a class="brand" href="#top" aria-label="Tea Timer — наверх"><span>tea</span><b aria-hidden="true">茶</b><span>timer</span></a>
+        <a class="brand" href="#top" aria-label="Чайный таймер Tea Timer — наверх"><span>Чайный</span><b aria-hidden="true">茶</b><span>таймер</span></a>
         <div class="nav">
+          <a href="#screens">Скриншоты</a>
           <a href="#features">Возможности</a>
           <a href="#install">Как установить</a>
           <a class="nav-cta" href="https://github.com/hardd23/tea-timer/releases/latest">Скачать APK ↗</a>
@@ -249,19 +379,13 @@
           </div>
           <p class="hero-footnote">Бесплатно · APK для Android · Открытый исходный код</p>
         </div>
-        <div class="visual" aria-label="Иллюстрация интерфейса чайного таймера">
-          <div class="phone" aria-hidden="true">
-            <div class="phone-brand">tea <span>茶</span> timer</div>
-            <div class="phone-label">Время заваривания</div>
-            <div class="time-visual"><span>03</span><i>:</i><span>00</span></div>
-            <div class="time-units"><span>минуты</span><span>секунды</span></div>
-            <div class="phone-rule"></div>
-            <div class="screen-start">Старт</div>
-            <div class="phone-counter"><span>Счётчик проливов</span><b>01</b></div>
+        <div class="visual" aria-label="Настоящий экран Android-приложения Tea Timer">
+          <div class="phone-screenshot">
+            <img src="./screenshots/tea-timer-idle.png" width="395" height="857" alt="Настоящий экран Tea Timer: время заваривания 00 минут 10 секунд, кнопка «Старт» и счётчик проливов" fetchpriority="high" decoding="async">
           </div>
-          <div class="float-note note-top" aria-hidden="true"><span class="dot"></span><span><strong>Точный момент</strong>Каждая секунда важна</span></div>
+          <div class="float-note note-top" aria-hidden="true"><span class="dot"></span><span><strong>Точное время</strong>Минуты и секунды</span></div>
           <div class="float-note note-bottom" aria-hidden="true"><span class="kanji">茶</span><span><strong>Чайный ритуал</strong>Без суеты и спешки</span></div>
-          <span class="hero-caption">Иллюстрация интерфейса</span>
+          <span class="hero-caption">Реальный экран Android-приложения</span>
         </div>
       </section>
     </main>
@@ -308,9 +432,35 @@
     </div>
   </section>
 
-  <section class="section preview wrap" aria-labelledby="preview-title">
-    <div class="preview-heading"><h2 id="preview-title">Знакомый интерфейс. Никакого шума.</h2><span>Иллюстрация из репозитория проекта</span></div>
-    <div class="preview-image"><img src="./hero.svg" alt="Превью интерфейса Tea Timer: время заваривания, фазы таймера и счётчик проливов" loading="lazy"></div>
+  <section class="section preview" id="screens" aria-labelledby="preview-title">
+    <div class="wrap">
+      <div class="screens-heading">
+        <div>
+          <p class="section-kicker">Настоящее приложение, настоящие экраны</p>
+          <h2 id="preview-title">Один ритуал.<br><em>Каждое мгновение.</em></h2>
+        </div>
+        <p>Здесь всё так, как на Вашем Android. Без нарисованных интерфейсов: от первого нажатия «Старт» до чайной паузы.</p>
+      </div>
+      <div class="screens-grid">
+        <figure class="screen-card">
+          <div class="screen-stage"><img src="./screenshots/tea-timer-brewing.png" width="395" height="857" loading="lazy" decoding="async" alt="Tea Timer: зелёный отсчёт 00:03 во время заваривания"></div>
+          <figcaption><span class="screen-index">01 / Заваривание</span><strong>Время под контролем.</strong><p>Обратный отсчёт помогает поймать нужный момент.</p></figcaption>
+        </figure>
+        <figure class="screen-card">
+          <div class="screen-stage"><img src="./screenshots/tea-timer-cooling.png" width="395" height="857" loading="lazy" decoding="async" alt="Tea Timer: красное значение −00:21 после завершения заваривания, один пролив"></div>
+          <figcaption><span class="screen-index">02 / После нуля</span><strong>Ритм продолжается.</strong><p>Время после завершения и число проливов остаются на виду.</p></figcaption>
+        </figure>
+        <figure class="screen-card">
+          <div class="screen-stage"><img src="./screenshots/tea-timer-wisdom.png" width="395" height="857" loading="lazy" decoding="async" alt="Tea Timer: всплывающее окно с чайным высказыванием"></div>
+          <figcaption><span class="screen-index">03 / Пауза</span><strong>Немного мудрости.</strong><p>Чайные мысли для небольшого перерыва.</p></figcaption>
+        </figure>
+        <figure class="screen-card">
+          <div class="screen-stage"><img src="./screenshots/tea-timer-settings.png" width="395" height="857" loading="lazy" decoding="async" alt="Tea Timer: настройки тёмной темы, русского языка и числа проливов"></div>
+          <figcaption><span class="screen-index">04 / Ваш выбор</span><strong>Только необходимое.</strong><p>Тема, язык и счётчик проливов — под Ваши привычки.</p></figcaption>
+        </figure>
+      </div>
+      <div class="screens-action"><span>Понравилось? Попробуйте таймер в своём ритме.</span><a href="https://github.com/hardd23/tea-timer/releases/latest">Скачать APK <span aria-hidden="true">↗</span></a></div>
+    </div>
   </section>
 
   <section class="section details" aria-labelledby="details-title">
@@ -358,7 +508,7 @@
 
   <footer class="footer">
     <div class="wrap footer-main">
-      <div><a class="brand" href="#top" aria-label="Tea Timer — наверх"><span>tea</span><b aria-hidden="true">茶</b><span>timer</span></a><small>Открытый исходный код · MIT</small></div>
+      <div><a class="brand" href="#top" aria-label="Чайный таймер Tea Timer — наверх"><span>Чайный</span><b aria-hidden="true">茶</b><span>таймер</span></a><small>Открытый исходный код · MIT</small></div>
       <div class="footer-links">
         <a href="https://github.com/hardd23/tea-timer" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
         <a href="https://github.com/hardd23/tea-timer/releases/latest">Все релизы ↗</a>
