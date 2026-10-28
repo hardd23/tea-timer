@@ -10,12 +10,15 @@
 </p>
 
 <p align="center">
+  <a href="https://hardd23.github.io/tea-timer/"><strong>Сайт приложения</strong></a>
+  &nbsp;·&nbsp;
   <a href="https://my-tea-timer.vercel.app/"><strong>Открыть таймер</strong></a>
   &nbsp;·&nbsp;
   <a href="https://github.com/hardd23/tea-timer/releases/latest"><strong>Скачать для Android</strong></a>
 </p>
 
 <p align="center">
+  <a href="https://hardd23.github.io/tea-timer/"><img src="https://img.shields.io/badge/Сайт-GitHub_Pages-327452?style=flat-square" alt="Сайт приложения на GitHub Pages"></a>
   <a href="https://my-tea-timer.vercel.app/"><img src="https://img.shields.io/badge/Веб--версия-Открыть-2e7d32?style=flat-square" alt="Открыть веб-версию"></a>
   <a href="https://github.com/hardd23/tea-timer/releases/latest"><img src="https://img.shields.io/badge/Android-APK-3ddc84?style=flat-square&amp;logo=android&amp;logoColor=white" alt="Скачать Android APK"></a>
   <a href="https://github.com/hardd23/tea-timer/releases/tag/v1.1.1"><img src="https://img.shields.io/badge/Версия-1.1.1-397b59?style=flat-square" alt="Версия 1.1.1"></a>
@@ -53,6 +56,10 @@
 
 ## Открыть или установить
 
+### Сайт приложения
+
+[**Tea Timer на GitHub Pages**](https://hardd23.github.io/tea-timer/) — лендинг проекта с описанием возможностей, иллюстрациями интерфейса, инструкцией по установке и ссылками на актуальный Android-релиз и веб-версию.
+
 ### Веб-версия
 
 Откройте [my-tea-timer.vercel.app](https://my-tea-timer.vercel.app/) в современном браузере на телефоне или компьютере.
@@ -88,6 +95,7 @@ npm run dev
 - [Tailwind CSS](https://tailwindcss.com/) 4
 - [Capacitor](https://capacitorjs.com/) 8 · Android
 - [Vercel](https://vercel.com/) · веб-публикация
+- [GitHub Pages](https://pages.github.com/) · лендинг проекта
 
 ## Структура проекта
 
@@ -97,11 +105,13 @@ app/
   data/                # Коллекция чайных высказываний
   globals.css          # Общая визуальная система
 assets/readme/         # Иллюстрация для этой страницы
+docs/                  # Лендинг GitHub Pages
 public/notification.mp3 # Звук завершения заваривания
 ```
 
 ## Ссылки
 
+- [Лендинг Tea Timer](https://hardd23.github.io/tea-timer/)
 - [Веб-версия](https://my-tea-timer.vercel.app/)
 - [Android-релизы](https://github.com/hardd23/tea-timer/releases)
 - [Telegram @hardd23](https://t.me/hardd23)
