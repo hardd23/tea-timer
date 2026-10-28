@@ -21,6 +21,30 @@
   <a href="./LICENSE"><img src="https://img.shields.io/badge/Лицензия-MIT-5f6b61?style=flat-square" alt="Лицензия MIT"></a>
 </p>
 
+## Интерфейс Tea Timer
+
+<p align="center">
+  <img src="./assets/readme/screenshots/tea-timer-idle.png" width="218" alt="Tea Timer — выбор минут и секунд до запуска">
+  &nbsp;
+  <img src="./assets/readme/screenshots/tea-timer-brewing.png" width="218" alt="Tea Timer — обратный отсчёт времени заваривания">
+  &nbsp;
+  <img src="./assets/readme/screenshots/tea-timer-cooling.png" width="218" alt="Tea Timer — время остывания и счётчик проливов">
+</p>
+
+<p align="center">
+  <sub>Выбор времени · Заваривание · Остывание после нуля</sub>
+</p>
+
+<details>
+  <summary><strong>Ещё экраны: чайные высказывания и настройки</strong></summary>
+  <br>
+  <p align="center">
+    <img src="./assets/readme/screenshots/tea-timer-wisdom.png" width="218" alt="Tea Timer — чайное высказывание">
+    &nbsp;
+    <img src="./assets/readme/screenshots/tea-timer-settings.png" width="218" alt="Tea Timer — настройки темы, языка и проливов">
+  </p>
+</details>
+
 ## Что умеет
 
 | | Возможность |
