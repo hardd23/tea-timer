@@ -1,8 +1,4 @@
-# Чайный таймер
-
-<p align="center">
-  <img src="./assets/readme/hero.svg" width="100%" alt="Интерфейс Чайного таймера: время заваривания, обратный отсчёт и счётчик проливов">
-</p>
+<h1 align="center">Tea Timer · Чайный таймер</h1>
 
 <p align="center">
   <strong>Небольшой таймер для вдумчивого чаепития.</strong><br>
@@ -70,24 +66,6 @@
 
 > Android может попросить разрешить установку приложений из этого источника — это стандартное системное сообщение для APK, скачанных не из Google Play.
 
-## Локальный запуск
-
-Нужны Node.js 20+ и npm.
-
-```bash
-npm ci
-npm run dev
-```
-
-После запуска откройте [http://localhost:3000](http://localhost:3000).
-
-| Команда | Назначение |
-| --- | --- |
-| `npm run dev` | Запустить режим разработки. |
-| `npm run lint` | Проверить код ESLint. |
-| `npm run build` | Собрать статическую production-версию в `out/`. |
-| `npm start` | Запустить production-сервер Next.js. |
-
 ## Стек
 
 - [Next.js](https://nextjs.org/) 16 · статический экспорт
@@ -96,18 +74,6 @@ npm run dev
 - [Capacitor](https://capacitorjs.com/) 8 · Android
 - [Vercel](https://vercel.com/) · веб-публикация
 - [GitHub Pages](https://pages.github.com/) · лендинг проекта
-
-## Структура проекта
-
-```text
-app/
-  components/          # Таймер, барабаны времени, настройки и диалоги
-  data/                # Коллекция чайных высказываний
-  globals.css          # Общая визуальная система
-assets/readme/         # Иллюстрация для этой страницы
-docs/                  # Лендинг GitHub Pages
-public/notification.mp3 # Звук завершения заваривания
-```
 
 ## Ссылки
 
