@@ -13,7 +13,10 @@
     "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "verify:versions": "node scripts/verify-version-sync.mjs",
+    "check": "npm run lint && npm run verify:versions && npm run build"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",
