@@ -47,8 +47,6 @@ const translations = {
     "315 tea sayings that help you pause for a moment.",
   "Один ритуал.": "One ritual.",
   "Каждое мгновение.": "Every moment.",
-  "Здесь всё так, как на вашем Android. Без нарисованных интерфейсов: от первого нажатия «Старт» до чайной паузы.":
-    "Everything here looks exactly as it does on your Android device. No fabricated interfaces: from the first tap on “Start” to a quiet tea break.",
   "01 / Заваривание": "01 / Brewing",
   "Время под контролем.": "Timing under control.",
   "Обратный отсчёт помогает поймать нужный момент.":
