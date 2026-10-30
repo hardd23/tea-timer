@@ -9,6 +9,12 @@ import React, {
 import TimeCarousel from './TimeCarousel';
 import { useLanguage } from './LanguageContext';
 import { useTeaSession } from './TeaSessionContext';
+import {
+  getBrewingProgress,
+  getBrewingRemainingSeconds,
+  getCoolingElapsedSeconds,
+  getCoolingProgress,
+} from '../lib/timer-time';
 
 interface CompletedTimer {
   id: string;
@@ -262,10 +268,10 @@ const TeaTimer: React.FC = () => {
     const remainingMs = progressEndAt - Date.now();
 
     if (progressTimerPhase === 'cooling') {
-      const overtimeSeconds = Math.floor(Math.max(0, -remainingMs) / 1000);
+      const overtimeSeconds = getCoolingElapsedSeconds(-remainingMs);
       const coolingTimeLeft = overtimeSeconds > 0 ? -overtimeSeconds : 0;
 
-      const coolingProgress = Math.min(1, Math.max(0, -remainingMs) / COOLING_DURATION_MS);
+      const coolingProgress = getCoolingProgress(-remainingMs, COOLING_DURATION_MS);
       setProgressBorderProgress(coolingProgress, COOLING_PROGRESS_COLOR);
       setActiveTimers((prevTimers) => {
         let didChange = false;
@@ -283,13 +289,12 @@ const TeaTimer: React.FC = () => {
       return;
     }
 
-    const brewingRemainingMs = Math.max(0, remainingMs);
-    const progress = Math.max(0, Math.min(1, brewingRemainingMs / progressDurationMs));
+    const progress = getBrewingProgress(remainingMs, progressDurationMs);
 
     setProgressBorderProgress(progress, BREWING_PROGRESS_COLOR);
 
     if (remainingMs <= 0) {
-      const overtimeSeconds = Math.floor(Math.max(0, -remainingMs) / 1000);
+      const overtimeSeconds = getCoolingElapsedSeconds(-remainingMs);
       startCooling(
         { id: progressTimerId, label: progressTimerLabel },
         overtimeSeconds,
@@ -297,7 +302,7 @@ const TeaTimer: React.FC = () => {
       return;
     }
 
-    const remainingSeconds = Math.ceil(brewingRemainingMs / 1000);
+    const remainingSeconds = getBrewingRemainingSeconds(remainingMs);
     setActiveTimers((prevTimers) => {
       let didChange = false;
       const nextTimers = prevTimers.map((timer) => {
@@ -363,10 +368,7 @@ const TeaTimer: React.FC = () => {
       const now = Date.now();
 
       if (progressTimerPhase === 'cooling') {
-        const coolingProgress = Math.min(
-          1,
-          Math.max(0, now - progressEndAt) / COOLING_DURATION_MS,
-        );
+        const coolingProgress = getCoolingProgress(now - progressEndAt, COOLING_DURATION_MS);
         setProgressBorderProgress(coolingProgress, COOLING_PROGRESS_COLOR);
 
         if (coolingProgress < 1) {
@@ -377,17 +379,15 @@ const TeaTimer: React.FC = () => {
         return;
       }
 
-      const remainingMs = Math.max(0, progressEndAt - now);
-      const progress = Math.max(0, Math.min(1, remainingMs / progressDurationMs));
+      const remainingMs = progressEndAt - now;
+      const progress = getBrewingProgress(remainingMs, progressDurationMs);
       setProgressBorderProgress(progress, BREWING_PROGRESS_COLOR);
 
       if (progress > 0) {
         progressFrameRef.current = requestAnimationFrame(updateProgress);
       } else {
         progressFrameRef.current = null;
-        const overtimeSeconds = Math.floor(
-          Math.max(0, Date.now() - progressEndAt) / 1000,
-        );
+        const overtimeSeconds = getCoolingElapsedSeconds(Date.now() - progressEndAt);
         startCooling(
           { id: progressTimerId, label: progressTimerLabel },
           overtimeSeconds,
