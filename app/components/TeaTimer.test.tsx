@@ -60,3 +60,63 @@ it('brews for ten seconds, then starts cooling and records one pour', () => {
   expect(container.querySelector('.brew-counter-value')?.textContent).toBe('1');
   expect(play).toHaveBeenCalledTimes(1);
 });
+
+it('does not repeat completion after an interval followed by page events', () => {
+  vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+  const { container } = render(
+    <LanguageProvider>
+      <TeaSessionProvider>
+        <TeaTimer />
+      </TeaSessionProvider>
+    </LanguageProvider>,
+  );
+
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+  act(() => { vi.advanceTimersByTime(10_000); });
+  expect(container.querySelector('.active-timer')?.getAttribute('data-phase')).toBe('cooling');
+  expect(container.querySelector('.brew-counter-value')?.textContent).toBe('1');
+  expect(play).toHaveBeenCalledTimes(1);
+
+  act(() => {
+    for (let i = 0; i < 3; i += 1) {
+      window.dispatchEvent(new Event('pageshow'));
+      document.dispatchEvent(new Event('visibilitychange'));
+    }
+    vi.advanceTimersByTime(3000);
+  });
+
+  expect(container.querySelector('.active-timer')?.getAttribute('data-phase')).toBe('cooling');
+  expect(screen.getByLabelText('-00:03 cooling').textContent).toBe('-00:03');
+  expect(container.querySelector('.brew-counter-value')?.textContent).toBe('1');
+  expect(play).toHaveBeenCalledTimes(1);
+});
+
+it('does not repeat completion when page events precede the interval', () => {
+  vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+  const { container } = render(
+    <LanguageProvider>
+      <TeaSessionProvider>
+        <TeaTimer />
+      </TeaSessionProvider>
+    </LanguageProvider>,
+  );
+
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+  vi.setSystemTime(new Date('2026-01-01T00:00:11Z'));
+  expect(container.querySelector('.active-timer')?.getAttribute('data-phase')).toBe('brewing');
+  expect(container.querySelector('.brew-counter-value')?.textContent).toBe('0');
+  expect(play).not.toHaveBeenCalled();
+
+  act(() => {
+    window.dispatchEvent(new Event('pageshow'));
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+
+  expect(container.querySelector('.active-timer')?.getAttribute('data-phase')).toBe('cooling');
+  expect(container.querySelector('.brew-counter-value')?.textContent).toBe('1');
+  expect(play).toHaveBeenCalledTimes(1);
+
+  act(() => { vi.advanceTimersByTime(1000); });
+  expect(container.querySelector('.brew-counter-value')?.textContent).toBe('1');
+  expect(play).toHaveBeenCalledTimes(1);
+});
