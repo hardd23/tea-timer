@@ -5,6 +5,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { LanguageProvider } from './LanguageContext';
 import { TeaSessionProvider } from './TeaSessionContext';
 import TeaTimer from './TeaTimer';
+import SessionResetButton from './SessionResetButton';
 
 const play = vi.fn().mockResolvedValue(undefined);
 
@@ -118,5 +119,63 @@ it('does not repeat completion when page events precede the interval', () => {
 
   act(() => { vi.advanceTimersByTime(1000); });
   expect(container.querySelector('.brew-counter-value')?.textContent).toBe('1');
+  expect(play).toHaveBeenCalledTimes(1);
+});
+
+it('catches up after returning from the background', () => {
+  const { container } = render(
+    <LanguageProvider><TeaSessionProvider><TeaTimer /></TeaSessionProvider></LanguageProvider>,
+  );
+
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+  vi.setSystemTime(new Date('2026-01-01T00:02:10Z'));
+  expect(container.querySelector('.active-timer')?.getAttribute('data-phase')).toBe('brewing');
+  act(() => { window.dispatchEvent(new Event('pageshow')); });
+
+  expect(container.querySelector('.active-timer')?.getAttribute('data-phase')).toBe('cooling');
+  expect(screen.getByLabelText('-02:00 cooling').textContent).toBe('-02:00');
+  expect(container.querySelector('.brew-counter-value')?.textContent).toBe('1');
+  expect(play).toHaveBeenCalledTimes(1);
+});
+
+it('does not complete a timer stopped before brewing ends', () => {
+  const { container } = render(
+    <LanguageProvider><TeaSessionProvider><TeaTimer /></TeaSessionProvider></LanguageProvider>,
+  );
+
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+  act(() => { vi.advanceTimersByTime(5000); });
+  fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
+  act(() => { vi.advanceTimersByTime(10_000); });
+
+  expect(container.querySelector('.active-timer')?.getAttribute('data-phase')).toBe('idle');
+  expect(screen.getByLabelText('No active timers')).toBeTruthy();
+  expect(container.querySelector('.brew-counter-value')?.textContent).toBe('0');
+  expect(play).not.toHaveBeenCalled();
+});
+
+it('resets the tea session after a completed brew', () => {
+  const { container } = render(
+    <LanguageProvider>
+      <TeaSessionProvider><SessionResetButton /><TeaTimer /></TeaSessionProvider>
+    </LanguageProvider>,
+  );
+
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+  act(() => { vi.advanceTimersByTime(10_000); });
+  expect(container.querySelector('.brew-counter-value')?.textContent).toBe('1');
+  expect(container.querySelector('.active-timer')?.getAttribute('data-phase')).toBe('cooling');
+  fireEvent.keyDown(screen.getByRole('spinbutton', { name: 'sec' }), { key: 'ArrowUp' });
+  expect(screen.getByRole('spinbutton', { name: 'sec' }).getAttribute('aria-valuenow')).toBe('20');
+  fireEvent.click(screen.getByRole('button', { name: 'Start a new tea session' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+
+  expect(container.querySelector('.active-timer')?.getAttribute('data-phase')).toBe('idle');
+  expect(screen.getByLabelText('No active timers')).toBeTruthy();
+  expect(container.querySelector('.brew-counter-value')?.textContent).toBe('0');
+  expect(screen.getByRole('spinbutton', { name: 'sec' }).getAttribute('aria-valuenow')).toBe('10');
+  act(() => { vi.advanceTimersByTime(20_000); });
+  expect(container.querySelector('.brew-counter-value')?.textContent).toBe('0');
+  expect(container.querySelector('.active-timer')?.getAttribute('data-phase')).toBe('idle');
   expect(play).toHaveBeenCalledTimes(1);
 });
