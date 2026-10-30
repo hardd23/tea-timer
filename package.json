@@ -16,7 +16,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "verify:versions": "node scripts/verify-version-sync.mjs",
-    "check": "npm run lint && npm run verify:versions && npm run build"
+    "test:unit": "vitest run",
+    "check": "npm run lint && npm run verify:versions && npm run test:unit && npm run build"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",
@@ -35,7 +36,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "jsdom": "^30.1.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.12"
   }
 }

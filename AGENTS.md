@@ -18,6 +18,7 @@
 
 - `npm run typecheck` performs a fast standalone TypeScript check.
 - `npm run verify:versions` checks that `package.json` version matches Android `versionName`.
-- `npm run check` is the required web gate: ESLint, version sync, and the production static build.
+- `npm run test:unit` runs the unit tests once.
+- `npm run check` is the required web gate: ESLint, version sync, unit tests, and the production static build.
 - For Android packaging, run the web build before `npx cap sync android`, then use the Gradle wrapper from `android/`.
 - Report the exact commands run, their results, and every changed file.
