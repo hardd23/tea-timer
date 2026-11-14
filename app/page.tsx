@@ -6,7 +6,6 @@ import SettingsMenu from './components/SettingsMenu';
 import { TeaSessionProvider } from './components/TeaSessionContext';
 import TeaWisdom from './components/TeaWisdom';
 import { GITHUB_URL } from './app-info';
-import { DiaryProvider, DiaryWarning } from './components/DiaryContext';
 
 function TeaTimerApp() {
   const { language, t } = useLanguage();
@@ -14,8 +13,7 @@ function TeaTimerApp() {
   return (
     <main className="min-h-dvh overflow-x-hidden bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
       <div className="page-frame mx-auto flex min-h-dvh w-full max-w-[420px] flex-col px-4 sm:px-6">
-        <DiaryProvider><TeaSessionProvider>
-          <DiaryWarning />
+        <TeaSessionProvider>
           <header className="brand-header" aria-label={t('appName')}>
             <h1 className={`brand-lockup is-${language}`}>
               <span>{t('brandLeft')}</span>
@@ -65,7 +63,7 @@ function TeaTimerApp() {
               </svg>
             </a>
           </footer>
-        </TeaSessionProvider></DiaryProvider>
+        </TeaSessionProvider>
       </div>
     </main>
   );

@@ -16,7 +16,6 @@ import AppDialog from './AppDialog';
 import { useLanguage } from './LanguageContext';
 import { useTeaSession } from './TeaSessionContext';
 import { useColorTheme, useTheme } from './ThemeToggle';
-import DiaryHistory from './DiaryHistory';
 
 type UpdateCheckState =
   | 'idle' | 'checking' | 'current' | 'error' | 'available' | 'downloading' | 'permission' | 'installing' | 'confirmationRequired' | 'installed' | 'installError';
@@ -31,12 +30,9 @@ export default function SettingsMenu() {
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme } = useColorTheme();
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const historyTriggerRef = useRef<HTMLButtonElement>(null);
   const checkerRef = useRef(createUpdateChecker(checkForAppUpdate));
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [historyGeneration, setHistoryGeneration] = useState(0);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
   const [updateState, setUpdateState] = useState<UpdateCheckState>('idle');
   const [updateResult, setUpdateResult] = useState<AppUpdateResult | null>(null);
@@ -255,11 +251,6 @@ export default function SettingsMenu() {
 
           <div className="settings-menu-separator" />
 
-          <button ref={historyTriggerRef} type="button" className="settings-menu-link" onClick={() => { setHistoryGeneration((value) => value + 1); setIsHistoryOpen(true); }} aria-haspopup="dialog" aria-expanded={isHistoryOpen} aria-controls="tea-history-dialog">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" strokeLinecap="round" /></svg>
-            {t('historyTitle')}
-          </button>
-
           <button type="button" className="settings-menu-link" onClick={openAbout}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
@@ -295,8 +286,6 @@ export default function SettingsMenu() {
           </button>
         </div>
       </AppDialog>
-
-      <DiaryHistory key={historyGeneration} isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} returnFocusRef={historyTriggerRef} />
 
       <AppDialog
         id="update-check-dialog"

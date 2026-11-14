@@ -1,8 +1,6 @@
 const STORAGE_KEY = "tea-timer-landing-language";
 
 const translations = {
-  "Дневник чаепитий": "Tea diary",
-  "В готовящейся версии 1.2.0 — календарь, заметки и экспорт истории в CSV и JSON. Данные хранятся на устройстве и могут исчезнуть при удалении приложения или очистке данных.": "The upcoming 1.2.0 version adds a calendar, notes, and CSV and JSON history export. Data stays on the device and can be lost if app data is cleared or the app is removed.",
   "Перейти к содержанию": "Skip to content",
   "Чайный": "Tea",
   "таймер": "Timer",
@@ -24,10 +22,10 @@ const translations = {
   "Чайный ритуал": "Tea ritual",
   "Без суеты и спешки": "Calm and unhurried",
   "Экран опубликованной версии 1.1.1": "Screen from the published version 1.1.1",
-  "Версия 1.2.0 готовится. Кнопка загрузки ведёт к последнему опубликованному релизу.":
-    "Version 1.2.0 is in preparation. The download button points to the latest published release.",
-  "На снимках — опубликованная версия 1.1.1. В готовящейся версии 1.2.0 интерфейс обновлён.":
-    "Screenshots show the published version 1.1.1. The interface has changed in the upcoming 1.2.0 version.",
+  "Кнопка загрузки ведёт к последнему опубликованному релизу.":
+    "The download button points to the latest published release.",
+  "На снимках — версия 1.1.1. В версии 1.2.0 интерфейс обновлён.":
+    "Screenshots show version 1.1.1. The interface has changed in version 1.2.0.",
   "В версии 1.2.0 — три цветовых акцента для каждого режима.": "Version 1.2.0 adds three accent palettes for each mode.",
   "В версии 1.2.0 — шаг секунд 5 или 10 и переход через минуту.": "Version 1.2.0 adds 5- or 10-second steps and minute rollover.",
   "В версии 1.2.0 приложение загрузит обновление. Android может запросить подтверждение установки.":

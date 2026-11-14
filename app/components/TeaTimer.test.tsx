@@ -8,6 +8,7 @@ import TeaTimer from './TeaTimer';
 import SessionResetButton from './SessionResetButton';
 import SettingsMenu from './SettingsMenu';
 import TeaWisdom from './TeaWisdom';
+import Home from '../page';
 
 const play = vi.fn().mockResolvedValue(undefined);
 
@@ -35,6 +36,18 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   vi.clearAllMocks();
+});
+
+it('keeps the diary inaccessible and does not open its storage during app use', () => {
+  const open = vi.fn();
+  vi.stubGlobal('indexedDB', { open });
+  HTMLDialogElement.prototype.showModal = function () { this.open = true; };
+  HTMLDialogElement.prototype.close = function () { this.open = false; this.dispatchEvent(new Event('close')); };
+  render(<Home />);
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Open settings' }));
+  expect(screen.queryByRole('button', { name: /tea session history|история чаепитий/i })).toBeNull();
+  expect(open).not.toHaveBeenCalled();
 });
 
 it.each(['Light', 'Dark'])('changes color themes independently in %s mode', (mode) => {

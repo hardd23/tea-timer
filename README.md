@@ -17,13 +17,13 @@
   <a href="https://hardd23.github.io/tea-timer/"><img src="https://img.shields.io/badge/Website-GitHub_Pages-327452?style=flat-square" alt="App website on GitHub Pages"></a>
   <a href="https://my-tea-timer.vercel.app/"><img src="https://img.shields.io/badge/Web--version-Open-2e7d32?style=flat-square" alt="Open the web version"></a>
   <a href="https://github.com/hardd23/tea-timer/releases/latest"><img src="https://img.shields.io/badge/Android-APK-3ddc84?style=flat-square&amp;logo=android&amp;logoColor=white" alt="Download the Android APK"></a>
-  <a href="https://github.com/hardd23/tea-timer/releases/tag/v1.1.1"><img src="https://img.shields.io/badge/Version-1.1.1-397b59?style=flat-square" alt="Version 1.1.1"></a>
+  <a href="https://github.com/hardd23/tea-timer/releases/tag/v1.2.0"><img src="https://img.shields.io/badge/Version-1.2.0-397b59?style=flat-square" alt="Version 1.2.0"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-5f6b61?style=flat-square" alt="MIT License"></a>
 </p>
 
 ## Tea Timer Interface
 
-The screenshots below show the published 1.1.1 interface. The prepared 1.2.0 interface has updated timer labels, settings, and full-screen dialogs; new screenshots are pending.
+The screenshots below show the 1.1.1 interface. Version 1.2.0 has updated timer labels, settings, and full-screen dialogs; new screenshots are pending.
 
 <p align="center">
   <img src="./assets/readme/screenshots/tea-timer-idle.png" width="218" alt="Tea Timer — selecting minutes and seconds before starting">
@@ -59,17 +59,14 @@ The screenshots below show the published 1.1.1 interface. The prepared 1.2.0 int
 | 💬 | 315 tea sayings in random order, with a 10-second reading pause. |
 | ↻ | Android update checks and verified APK downloads through GitHub Releases. |
 
-## Preparing 1.2.0
+## What's New in 1.2.0
 
 - Select 5- or 10-second steps; scrolling seconds across zero adjusts minutes in either direction.
 - Smooth time wheels, full-screen settings and sayings, and a 10-second pause between sayings.
 - Brewing and cooling status labels, plus tea leaf, warm amber, and plum accents in either light or dark mode.
 - Android checks for stable updates, downloads a verified APK, and hands installation to Android.
-- A local tea diary records infusions and actions, with a calendar, optional notes, and CSV/JSON export.
 
-Open **Tea session history** in settings to browse the calendar and edit notes. A session closes after 30 minutes of inactivity, but never during a running countdown. Its approximate duration is measured to the last completed infusion plus eight minutes; when there is no completed infusion, no duration is estimated. History stays on this device and can be lost if app data is cleared or the app is removed. Export a copy to preserve it; there is no account or synchronization.
-
-Version 1.2.0 is being prepared and is not yet published. The download link above points to the latest published release.
+The download link above points to the latest published release.
 
 ## How It Works
 
@@ -96,7 +93,7 @@ Download the latest `Tea-Timer-*.apk` file from the [Releases](https://github.co
 
 > Android may ask you to allow app installation from this source — this is a standard system message for APK files downloaded outside Google Play.
 
-Starting with the prepared 1.2.0 version, the app can check for a stable update and download its verified APK from GitHub. Android may ask you to allow installation from Tea Timer or confirm the update; installation is complete only when Android reports success. If a suitable APK cannot be verified, the app offers the release page instead.
+Starting with version 1.2.0, the app can check for a stable update and download its verified APK from GitHub. Android may ask you to allow installation from Tea Timer or confirm the update; installation is complete only when Android reports success. If a suitable APK cannot be verified, the app offers the release page instead.
 
 ## Tech Stack
 
