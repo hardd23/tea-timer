@@ -4,9 +4,12 @@ import { useCallback, useSyncExternalStore } from 'react';
 import { useLanguage } from './LanguageContext';
 
 export type Theme = 'light' | 'dark';
+export type ColorTheme = 'leaf' | 'amber' | 'plum';
 
 const THEME_STORAGE_KEY = 'tea-timer-theme';
 const THEME_CHANGE_EVENT = 'tea-timer-theme-change';
+const COLOR_THEME_STORAGE_KEY = 'tea-timer-color-theme';
+const COLOR_THEME_CHANGE_EVENT = 'tea-timer-color-theme-change';
 const THEME_COLORS: Record<Theme, string> = {
   light: '#f4f1e8',
   dark: '#111211',
@@ -47,6 +50,30 @@ export function useTheme() {
   const setTheme = useCallback((nextTheme: Theme) => applyTheme(nextTheme), []);
 
   return { theme, setTheme };
+}
+
+const getColorThemeSnapshot = (): ColorTheme => {
+  const value = document.documentElement.dataset.colorTheme;
+  return value === 'amber' || value === 'plum' ? value : 'leaf';
+};
+
+const subscribeToColorTheme = (onChange: () => void) => {
+  window.addEventListener(COLOR_THEME_CHANGE_EVENT, onChange);
+  return () => window.removeEventListener(COLOR_THEME_CHANGE_EVENT, onChange);
+};
+
+export function useColorTheme() {
+  const colorTheme = useSyncExternalStore(subscribeToColorTheme, getColorThemeSnapshot, () => 'leaf');
+  const setColorTheme = useCallback((nextTheme: ColorTheme) => {
+    document.documentElement.dataset.colorTheme = nextTheme;
+    try {
+      window.localStorage.setItem(COLOR_THEME_STORAGE_KEY, nextTheme);
+    } catch {
+      // The selected theme still applies for this session.
+    }
+    window.dispatchEvent(new Event(COLOR_THEME_CHANGE_EVENT));
+  }, []);
+  return { colorTheme, setColorTheme };
 }
 
 export default function ThemeToggle() {

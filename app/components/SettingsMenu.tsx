@@ -1,19 +1,25 @@
 'use client';
 
-import { useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { App } from '@capacitor/app';
 import { APP_VERSION, GITHUB_URL } from '../app-info';
 import {
   checkForAppUpdate,
+  createUpdateChecker,
+  getUpdateInstaller,
+  isAndroidApp,
   isUpdateCheckAvailable,
+  type AppUpdateResult,
+  type InstallStatus,
 } from '../lib/app-update';
 import AppDialog from './AppDialog';
 import { useLanguage } from './LanguageContext';
 import { useTeaSession } from './TeaSessionContext';
-import { useTheme } from './ThemeToggle';
+import { useColorTheme, useTheme } from './ThemeToggle';
+import DiaryHistory from './DiaryHistory';
 
 type UpdateCheckState =
-  | { status: 'idle' | 'checking' | 'current' | 'error' }
-  | { status: 'available'; version: string; releaseUrl: string };
+  | 'idle' | 'checking' | 'current' | 'error' | 'available' | 'downloading' | 'permission' | 'installing' | 'confirmationRequired' | 'installed' | 'installError';
 
 const subscribeToPlatform = () => () => {};
 const getUpdateCheckSnapshot = () => isUpdateCheckAvailable();
@@ -21,19 +27,60 @@ const getServerUpdateCheckSnapshot = () => false;
 
 export default function SettingsMenu() {
   const { language, setLanguage, t } = useLanguage();
-  const { adjustPourCount, pourCount, requestSessionReset } = useTeaSession();
+  const { adjustPourCount, pourCount, requestSessionReset, secondsStep, setSecondsStep } = useTeaSession();
   const { theme, setTheme } = useTheme();
+  const { colorTheme, setColorTheme } = useColorTheme();
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const isCheckingUpdatesRef = useRef(false);
+  const historyTriggerRef = useRef<HTMLButtonElement>(null);
+  const checkerRef = useRef(createUpdateChecker(checkForAppUpdate));
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [historyGeneration, setHistoryGeneration] = useState(0);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
-  const [updateState, setUpdateState] = useState<UpdateCheckState>({ status: 'idle' });
+  const [updateState, setUpdateState] = useState<UpdateCheckState>('idle');
+  const [updateResult, setUpdateResult] = useState<AppUpdateResult | null>(null);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
   const canCheckForUpdates = useSyncExternalStore(
     subscribeToPlatform,
     getUpdateCheckSnapshot,
     getServerUpdateCheckSnapshot,
   );
+
+  useEffect(() => {
+    if (!isAndroidApp()) return;
+    let active = true;
+    const backgroundCheck = async () => {
+      try {
+        const result = await checkerRef.current();
+        if (active && result) {
+          setUpdateResult(result);
+          setUpdateAvailable(result.updateAvailable);
+        }
+      } catch {
+        // Keep the last confirmed notification; a manual check can retry.
+      }
+    };
+    void backgroundCheck();
+    const listener = App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) void backgroundCheck();
+    });
+    return () => { active = false; void listener.then((handle) => handle.remove()).catch(() => {}); };
+  }, []);
+
+  useEffect(() => {
+    if (!isAndroidApp()) return;
+    let active = true;
+    const installer = getUpdateInstaller();
+    const onStatus = ({ status }: { status: InstallStatus }) => {
+      if (!active || status === 'idle') return;
+      setUpdateState(status === 'success' ? 'installed' : status === 'failed' ? 'installError' : status);
+      if (status === 'success') setUpdateAvailable(false);
+    };
+    const listener = installer.addListener('installStatus', onStatus);
+    void installer.getStatus().then(onStatus).catch(() => {});
+    return () => { active = false; void listener.then((handle) => handle.remove()).catch(() => {}); };
+  }, []);
 
   const openAbout = () => {
     setIsMenuOpen(false);
@@ -46,38 +93,72 @@ export default function SettingsMenu() {
   };
 
   const checkForUpdates = async () => {
-    if (isCheckingUpdatesRef.current) return;
-
-    isCheckingUpdatesRef.current = true;
     setIsMenuOpen(false);
     setIsUpdateOpen(true);
-    setUpdateState({ status: 'checking' });
+    if (['downloading', 'installing', 'confirmationRequired', 'permission'].includes(updateState)) return;
+    setUpdateState('checking');
 
     try {
-      const result = await checkForAppUpdate();
-      setUpdateState(result.updateAvailable
-        ? {
-            status: 'available',
-            version: result.latestVersion,
-            releaseUrl: result.releaseUrl,
-          }
-        : { status: 'current' });
+      const result = await checkerRef.current(true);
+      if (!result) return;
+      setUpdateResult(result);
+      setUpdateAvailable(result.updateAvailable);
+      setUpdateState(result.updateAvailable ? 'available' : 'current');
     } catch {
-      setUpdateState({ status: 'error' });
-    } finally {
-      isCheckingUpdatesRef.current = false;
+      setUpdateState('error');
     }
   };
 
-  const updateMessage = updateState.status === 'checking'
+  const downloadUpdate = async () => {
+    if (!updateResult?.apk || !isAndroidApp()) return;
+    setUpdateState('downloading');
+    try {
+      await getUpdateInstaller().download(updateResult.apk);
+      await installUpdate();
+    }
+    catch { setUpdateState('error'); }
+  };
+
+  const installUpdate = async (requestPermission = false) => {
+    if (!isAndroidApp()) return;
+    setUpdateState('installing');
+    try {
+      const installer = getUpdateInstaller();
+      const result = await (requestPermission ? installer.requestPermission() : installer.install());
+      if (result.status === 'permissionRequired') setUpdateState('permission');
+      else {
+        const current = await installer.getStatus();
+        setUpdateState(current.status === 'success' ? 'installed' : current.status === 'failed' ? 'installError' : current.status === 'confirmationRequired' ? 'confirmationRequired' : 'installing');
+      }
+    } catch { setUpdateState('installError'); }
+  };
+
+  const continueInstall = async () => {
+    try {
+      const installer = getUpdateInstaller();
+      const result = await installer.continueInstall();
+      if (result.status === 'installing') {
+        const current = await installer.getStatus();
+        setUpdateState(current.status === 'success' ? 'installed' : current.status === 'failed' ? 'installError' : current.status === 'confirmationRequired' ? 'confirmationRequired' : 'installing');
+      }
+    }
+    catch { setUpdateState('installError'); }
+  };
+
+  const updateMessage = updateState === 'checking'
     ? t('checkingForUpdates')
-    : updateState.status === 'current'
+    : updateState === 'current'
       ? t('latestVersionInstalled')
-      : updateState.status === 'available'
-        ? `${t('updateAvailable')} ${updateState.version}`
-        : updateState.status === 'error'
+      : updateState === 'available'
+        ? t('updateAvailable')
+        : updateState === 'error'
           ? t('updateCheckFailed')
-          : '';
+          : updateState === 'downloading' ? t('updateDownloading')
+            : updateState === 'permission' ? t('updatePermission')
+              : updateState === 'installing' ? t('updateInstalling')
+                : updateState === 'confirmationRequired' ? t('updateInstallerOpened')
+                  : updateState === 'installed' ? t('updateInstalled')
+                    : updateState === 'installError' ? t('updateInstallFailed') : '';
 
   return (
     <>
@@ -87,7 +168,7 @@ export default function SettingsMenu() {
         type="button"
         className="header-action settings-menu-trigger"
         onClick={() => setIsMenuOpen(true)}
-        aria-label={t('openSettings')}
+        aria-label={updateAvailable ? `${t('openSettings')} — ${t('updateNotification')}` : t('openSettings')}
         aria-haspopup="dialog"
         aria-expanded={isMenuOpen}
         aria-controls="settings-menu-dialog"
@@ -96,6 +177,7 @@ export default function SettingsMenu() {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
           <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
         </svg>
+        {updateAvailable ? <span className="update-badge update-badge-trigger" aria-hidden="true" /> : null}
       </button>
 
       <AppDialog
@@ -104,6 +186,7 @@ export default function SettingsMenu() {
         labelledBy="settings-menu-title"
         closeLabel={t('closeSettings')}
         contentClassName="settings-menu-panel"
+        fullScreen
         onRequestClose={() => setIsMenuOpen(false)}
         returnFocusRef={triggerRef}
       >
@@ -123,6 +206,25 @@ export default function SettingsMenu() {
           </div>
 
           <div className="settings-menu-row">
+            <span>{t('colorThemeSetting')}</span>
+            <div className="settings-color-themes" role="group" aria-label={t('colorThemeSetting')}>
+              {(['leaf', 'amber', 'plum'] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={`settings-color-choice settings-color-choice-${option}`}
+                  onClick={() => setColorTheme(option)}
+                  aria-pressed={colorTheme === option}
+                  aria-label={t(option === 'leaf' ? 'colorThemeLeaf' : option === 'amber' ? 'colorThemeAmber' : 'colorThemePlum')}
+                  title={t(option === 'leaf' ? 'colorThemeLeaf' : option === 'amber' ? 'colorThemeAmber' : 'colorThemePlum')}
+                >
+                  <span className="settings-color-swatch" aria-hidden="true">{colorTheme === option ? '✓' : ''}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="settings-menu-row">
             <span>{t('languageSetting')}</span>
             <div className="settings-segmented-control" role="group" aria-label={t('languageSetting')}>
               <button type="button" onClick={() => setLanguage('ru')} aria-pressed={language === 'ru'}>
@@ -131,6 +233,14 @@ export default function SettingsMenu() {
               <button type="button" onClick={() => setLanguage('en')} aria-pressed={language === 'en'}>
                 EN
               </button>
+            </div>
+          </div>
+
+          <div className="settings-menu-row">
+            <span>{t('secondsStepSetting')}</span>
+            <div className="settings-segmented-control" role="group" aria-label={t('secondsStepSetting')}>
+              <button type="button" onClick={() => setSecondsStep(5)} aria-pressed={secondsStep === 5}>5 {t('seconds')}</button>
+              <button type="button" onClick={() => setSecondsStep(10)} aria-pressed={secondsStep === 10}>10 {t('seconds')}</button>
             </div>
           </div>
 
@@ -145,6 +255,11 @@ export default function SettingsMenu() {
 
           <div className="settings-menu-separator" />
 
+          <button ref={historyTriggerRef} type="button" className="settings-menu-link" onClick={() => { setHistoryGeneration((value) => value + 1); setIsHistoryOpen(true); }} aria-haspopup="dialog" aria-expanded={isHistoryOpen} aria-controls="tea-history-dialog">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" strokeLinecap="round" /></svg>
+            {t('historyTitle')}
+          </button>
+
           <button type="button" className="settings-menu-link" onClick={openAbout}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
@@ -158,12 +273,13 @@ export default function SettingsMenu() {
               type="button"
               className="settings-menu-link"
               onClick={() => void checkForUpdates()}
-              disabled={updateState.status === 'checking'}
+              aria-label={updateAvailable ? `${t('checkForUpdates')} — ${t('updateNotification')}` : undefined}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                 <path d="M20 11a8 8 0 0 0-14.8-4M4 4v5h5M4 13a8 8 0 0 0 14.8 4M20 20v-5h-5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               {t('checkForUpdates')}
+              {updateAvailable ? <span className="update-badge" aria-hidden="true" /> : null}
             </button>
           ) : null}
 
@@ -180,6 +296,8 @@ export default function SettingsMenu() {
         </div>
       </AppDialog>
 
+      <DiaryHistory key={historyGeneration} isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} returnFocusRef={historyTriggerRef} />
+
       <AppDialog
         id="update-check-dialog"
         isOpen={isUpdateOpen}
@@ -191,7 +309,7 @@ export default function SettingsMenu() {
       >
         <div className="update-dialog-content">
           <svg
-            className={updateState.status === 'checking' ? 'update-dialog-icon is-checking' : 'update-dialog-icon'}
+            className={updateState === 'checking' || updateState === 'downloading' || updateState === 'installing' ? 'update-dialog-icon is-checking' : 'update-dialog-icon'}
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -202,15 +320,16 @@ export default function SettingsMenu() {
           </svg>
           <h2 id="update-check-title">{t('updateCheckTitle')}</h2>
           <p role="status" aria-live="polite">{updateMessage}</p>
-          {updateState.status === 'available' ? (
-            <a
-              className="update-dialog-download"
-              href={updateState.releaseUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {t('downloadUpdate')}
-            </a>
+          {updateResult && updateState !== 'checking' ? <p>{t('installedVersion')}: {updateResult.currentVersion}<br />{t('availableVersion')}: {updateResult.latestVersion}</p> : null}
+          {updateState === 'available' && isAndroidApp() && updateResult?.apk ? <button type="button" className="update-dialog-download" onClick={() => void downloadUpdate()}>{t('updateApp')}</button> : null}
+          {updateState === 'confirmationRequired' ? <button type="button" className="update-dialog-download" onClick={() => void continueInstall()}>{t('continueInstallation')}</button> : null}
+          {updateState === 'permission' ? <button type="button" className="update-dialog-download" onClick={() => void installUpdate(true)}>{t('allowInstall')}</button> : null}
+          {updateState === 'error' || updateState === 'installError' ? <button type="button" className="update-dialog-download" onClick={() => void checkForUpdates()}>{t('retryUpdate')}</button> : null}
+          {updateResult?.updateAvailable && (updateState === 'available' || updateState === 'error' || updateState === 'installError') ? (
+            <>
+              {!updateResult.apk || !isAndroidApp() ? <p>{t('updateApkUnavailable')}</p> : null}
+              <a href={updateResult.releaseUrl} target="_blank" rel="noopener noreferrer">{t('openReleasePage')}</a>
+            </>
           ) : null}
         </div>
       </AppDialog>

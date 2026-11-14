@@ -32,6 +32,12 @@ const themeScript = `
     } catch {}
 
     document.documentElement.dataset.theme = theme;
+    try {
+      const colorTheme = window.localStorage.getItem('tea-timer-color-theme');
+      document.documentElement.dataset.colorTheme = colorTheme === 'amber' || colorTheme === 'plum' ? colorTheme : 'leaf';
+    } catch {
+      document.documentElement.dataset.colorTheme = 'leaf';
+    }
     document.documentElement.style.colorScheme = theme;
     document
       .querySelector('meta[name="theme-color"]')

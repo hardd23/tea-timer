@@ -1,6 +1,8 @@
 const STORAGE_KEY = "tea-timer-landing-language";
 
 const translations = {
+  "Дневник чаепитий": "Tea diary",
+  "В готовящейся версии 1.2.0 — календарь, заметки и экспорт истории в CSV и JSON. Данные хранятся на устройстве и могут исчезнуть при удалении приложения или очистке данных.": "The upcoming 1.2.0 version adds a calendar, notes, and CSV and JSON history export. Data stays on the device and can be lost if app data is cleared or the app is removed.",
   "Перейти к содержанию": "Skip to content",
   "Чайный": "Tea",
   "таймер": "Timer",
@@ -21,7 +23,15 @@ const translations = {
   "Минуты и секунды": "Minutes and seconds",
   "Чайный ритуал": "Tea ritual",
   "Без суеты и спешки": "Calm and unhurried",
-  "Реальный экран Android-приложения": "Actual Android app screen",
+  "Экран опубликованной версии 1.1.1": "Screen from the published version 1.1.1",
+  "Версия 1.2.0 готовится. Кнопка загрузки ведёт к последнему опубликованному релизу.":
+    "Version 1.2.0 is in preparation. The download button points to the latest published release.",
+  "На снимках — опубликованная версия 1.1.1. В готовящейся версии 1.2.0 интерфейс обновлён.":
+    "Screenshots show the published version 1.1.1. The interface has changed in the upcoming 1.2.0 version.",
+  "В версии 1.2.0 — три цветовых акцента для каждого режима.": "Version 1.2.0 adds three accent palettes for each mode.",
+  "В версии 1.2.0 — шаг секунд 5 или 10 и переход через минуту.": "Version 1.2.0 adds 5- or 10-second steps and minute rollover.",
+  "В версии 1.2.0 приложение загрузит обновление. Android может запросить подтверждение установки.":
+    "In version 1.2.0, the app downloads updates. Android may ask you to confirm installation.",
   "Заваривание и остывание": "Brewing and cooling",
   "До 99 проливов": "Up to 99 infusions",
   "315 чайных мыслей": "315 tea thoughts",
@@ -45,6 +55,8 @@ const translations = {
   "Мудрость в паузах.": "Wisdom in the pauses.",
   "315 чайных высказываний, которые помогают на мгновение остановиться.":
     "315 tea sayings that help you pause for a moment.",
+  "315 чайных высказываний. В версии 1.2.0 — полноэкранный режим и 10 секунд на чтение каждой фразы.":
+    "315 tea sayings. Version 1.2.0 adds a full-screen view and a 10-second pause to read each saying.",
   "Один ритуал.": "One ritual.",
   "Каждое мгновение.": "Every moment.",
   "01 / Заваривание": "01 / Brewing",
@@ -68,6 +80,8 @@ const translations = {
   "И ничего лишнего.": "Nothing you do not.",
   "Выберите время привычным движением, переключите тему под вечернее настроение или смените язык. Настройки останутся с вами.":
     "Set the time with a familiar gesture, switch the theme to suit the evening, or change the language. Your settings stay with you.",
+  "Выберите время привычным движением. В версии 1.2.0 полноэкранное меню поможет настроить цвета, язык и шаг таймера.":
+    "Set the time with a familiar gesture. In version 1.2.0, the full-screen menu lets you choose colors, language, and timer steps.",
   "Светлая и тёмная темы": "Light and dark themes",
   "Под настроение и освещение.": "For any mood and lighting.",
   "Два языка": "Two languages",

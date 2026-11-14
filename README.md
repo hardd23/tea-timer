@@ -23,6 +23,8 @@
 
 ## Tea Timer Interface
 
+The screenshots below show the published 1.1.1 interface. The prepared 1.2.0 interface has updated timer labels, settings, and full-screen dialogs; new screenshots are pending.
+
 <p align="center">
   <img src="./assets/readme/screenshots/tea-timer-idle.png" width="218" alt="Tea Timer — selecting minutes and seconds before starting">
   &nbsp;
@@ -49,21 +51,25 @@
 
 | | Feature |
 | --- | --- |
-| ⏳ | Independent vertical minute and second wheels with precise gesture, mouse wheel, or keyboard control. |
+| ⏳ | Minute and second wheels with gesture, mouse wheel, and keyboard controls; choose 5- or 10-second steps. |
 | 🍵 | Two timer phases: brewing until zero and cooling time after it. |
 | 🔢 | Infusion counter with automatic tracking and manual adjustment in settings — up to 99. |
-| 🌗 | Light and dark themes that are remembered on the device. |
+| 🌗 | Light and dark modes with three independently selectable accent palettes, remembered on the device. |
 | RU / EN | Russian and English interfaces without reloading the page. |
-| 💬 | 315 tea sayings in random order. |
-| ↻ | Android app update checks through GitHub Releases. |
+| 💬 | 315 tea sayings in random order, with a 10-second reading pause. |
+| ↻ | Android update checks and verified APK downloads through GitHub Releases. |
 
-## What Is New in 1.1.1
+## Preparing 1.2.0
 
-- A unified settings menu for the theme, language, infusion counter, app information, and resetting the tea session.
-- New vertical time selection wheels with calmer and more precise scrolling.
-- Android app update checks and navigation to the new release page.
-- Improved interface responsiveness and typography.
-- Fixed an unnecessary focus outline and independent seconds transition between `50` and `00`.
+- Select 5- or 10-second steps; scrolling seconds across zero adjusts minutes in either direction.
+- Smooth time wheels, full-screen settings and sayings, and a 10-second pause between sayings.
+- Brewing and cooling status labels, plus tea leaf, warm amber, and plum accents in either light or dark mode.
+- Android checks for stable updates, downloads a verified APK, and hands installation to Android.
+- A local tea diary records infusions and actions, with a calendar, optional notes, and CSV/JSON export.
+
+Open **Tea session history** in settings to browse the calendar and edit notes. A session closes after 30 minutes of inactivity, but never during a running countdown. Its approximate duration is measured to the last completed infusion plus eight minutes; when there is no completed infusion, no duration is estimated. History stays on this device and can be lost if app data is cleared or the app is removed. Export a copy to preserve it; there is no account or synchronization.
+
+Version 1.2.0 is being prepared and is not yet published. The download link above points to the latest published release.
 
 ## How It Works
 
@@ -89,6 +95,8 @@ Open [my-tea-timer.vercel.app](https://my-tea-timer.vercel.app/) in a modern bro
 Download the latest `Tea-Timer-*.apk` file from the [Releases](https://github.com/hardd23/tea-timer/releases/latest) page, open it on your Android device, and confirm the installation. The APK is signed with the app's permanent key, so future versions can be installed over previous ones.
 
 > Android may ask you to allow app installation from this source — this is a standard system message for APK files downloaded outside Google Play.
+
+Starting with the prepared 1.2.0 version, the app can check for a stable update and download its verified APK from GitHub. Android may ask you to allow installation from Tea Timer or confirm the update; installation is complete only when Android reports success. If a suitable APK cannot be verified, the app offers the release page instead.
 
 ## Tech Stack
 

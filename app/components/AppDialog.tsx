@@ -6,6 +6,7 @@ interface AppDialogProps {
   children: ReactNode;
   closeLabel: string;
   contentClassName?: string;
+  fullScreen?: boolean;
   id: string;
   isOpen: boolean;
   labelledBy: string;
@@ -17,6 +18,7 @@ export default function AppDialog({
   children,
   closeLabel,
   contentClassName = '',
+  fullScreen = false,
   id,
   isOpen,
   labelledBy,
@@ -47,7 +49,7 @@ export default function AppDialog({
     <dialog
       id={id}
       ref={dialogRef}
-      className="app-dialog"
+      className={`app-dialog${fullScreen ? ' app-dialog-fullscreen' : ''}`}
       aria-labelledby={labelledBy}
       onCancel={(event) => {
         event.preventDefault();

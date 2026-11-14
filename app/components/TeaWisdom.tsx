@@ -1,10 +1,11 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { type CSSProperties, type RefObject, useEffect, useRef, useState } from 'react';
 import teaQuotesData from '../data/tea-quotes-popup-300.ru.json';
 import AppDialog from './AppDialog';
 import { useLanguage } from './LanguageContext';
 import { useTeaSession } from './TeaSessionContext';
+import { useDiary } from './DiaryContext';
 
 interface TeaQuote {
   id: string;
@@ -18,9 +19,12 @@ interface TeaQuotePopupProps {
   isTeaCoolingTooLong: boolean;
   onClose: () => void;
   onNext: () => void;
+  triggerRef: RefObject<HTMLButtonElement | null>;
+  remainingMs: number;
 }
 
 const TEA_QUOTES: TeaQuote[] = teaQuotesData.quotes;
+const QUOTE_COOLDOWN_MS = 10_000;
 
 const createShuffledOrder = (length: number, previousIndex: number | null) => {
   const order = Array.from({ length }, (_, index) => index);
@@ -43,8 +47,12 @@ function TeaQuotePopup({
   isTeaCoolingTooLong,
   onClose,
   onNext,
+  triggerRef,
+  remainingMs,
 }: TeaQuotePopupProps) {
   const { t } = useLanguage();
+  const waiting = remainingMs > 0;
+  const progress = 1 - remainingMs / QUOTE_COOLDOWN_MS;
 
   return (
     <AppDialog
@@ -53,6 +61,8 @@ function TeaQuotePopup({
       labelledBy="tea-wisdom-title"
       closeLabel={t('closeTeaWisdom')}
       contentClassName="tea-wisdom-panel"
+      fullScreen
+      returnFocusRef={triggerRef}
       onRequestClose={onClose}
     >
       <div className="tea-wisdom-content">
@@ -65,11 +75,21 @@ function TeaQuotePopup({
           <p className="tea-wisdom-cooling-notice" aria-live="polite">
             {t('teaCooling')}
           </p>
-        ) : (
-          <button type="button" className="tea-wisdom-next" onClick={onNext}>
-            {t('more')}
-          </button>
-        )}
+        ) : null}
+        <button
+          type="button"
+          className="tea-wisdom-next"
+          onClick={onNext}
+          disabled={waiting}
+          aria-describedby="tea-wisdom-cooldown-status"
+          style={{ '--quote-progress': progress } as CSSProperties}
+        >
+          <span className="tea-wisdom-next-label">{t('more')}</span>
+          <span className="tea-wisdom-next-filled-label" aria-hidden="true">{t('more')}</span>
+        </button>
+        <p id="tea-wisdom-cooldown-status" className="tea-wisdom-cooldown-status" role="status">
+          {waiting ? `${t('quoteWait')} ${Math.ceil(remainingMs / 1000)} ${t('seconds')}` : t('quoteReady')}
+        </p>
       </div>
     </AppDialog>
   );
@@ -78,12 +98,36 @@ function TeaQuotePopup({
 export default function TeaWisdom() {
   const { t } = useLanguage();
   const { isTeaCoolingTooLong } = useTeaSession();
+  const recordDiary = useDiary()?.record;
   const [isOpen, setIsOpen] = useState(false);
   const [quote, setQuote] = useState<TeaQuote>(TEA_QUOTES[0]);
+  const [deadline, setDeadline] = useState<number | null>(null);
+  const [now, setNow] = useState(0);
   const remainingIndexesRef = useRef<number[]>([]);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const lastIndexRef = useRef<number | null>(null);
 
+  useEffect(() => {
+    if (!isOpen || deadline === null) return;
+    const update = () => {
+      const currentTime = Date.now();
+      setNow(currentTime);
+      if (currentTime >= deadline) window.clearInterval(timer);
+    };
+    const timer = window.setInterval(update, 100);
+    document.addEventListener('visibilitychange', update);
+    window.addEventListener('pageshow', update);
+    window.addEventListener('focus', update);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', update);
+      window.removeEventListener('pageshow', update);
+      window.removeEventListener('focus', update);
+    };
+  }, [deadline, isOpen]);
+
   const selectNextQuote = () => {
+    if (deadline !== null && Date.now() < deadline) return;
     if (remainingIndexesRef.current.length === 0) {
       remainingIndexesRef.current = createShuffledOrder(TEA_QUOTES.length, lastIndexRef.current);
     }
@@ -93,10 +137,15 @@ export default function TeaWisdom() {
 
     lastIndexRef.current = nextIndex;
     setQuote(TEA_QUOTES[nextIndex]);
+    recordDiary?.({ type: 'quote' });
+    const startedAt = Date.now();
+    setNow(startedAt);
+    setDeadline(startedAt + QUOTE_COOLDOWN_MS);
   };
 
   const openWisdom = () => {
-    selectNextQuote();
+    if (lastIndexRef.current === null) selectNextQuote();
+    else { setNow(Date.now()); recordDiary?.({ type: 'quote' }); }
     setIsOpen(true);
   };
 
@@ -104,6 +153,7 @@ export default function TeaWisdom() {
     <>
       <button
         type="button"
+        ref={triggerRef}
         className="header-action tea-wisdom-trigger"
         onClick={openWisdom}
         aria-label={t('openTeaWisdom')}
@@ -130,6 +180,8 @@ export default function TeaWisdom() {
         isTeaCoolingTooLong={isTeaCoolingTooLong}
         onClose={() => setIsOpen(false)}
         onNext={selectNextQuote}
+        triggerRef={triggerRef}
+        remainingMs={deadline === null ? 0 : Math.max(0, Math.min(QUOTE_COOLDOWN_MS, deadline - now))}
       />
     </>
   );

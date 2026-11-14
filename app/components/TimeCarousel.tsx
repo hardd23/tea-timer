@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import type { KeyboardEvent, PointerEvent } from 'react';
 import { useLanguage } from './LanguageContext';
+import { useTeaSession } from './TeaSessionContext';
 
 interface TimeCarouselProps {
   value: number;
@@ -49,20 +50,70 @@ function TimeWheel({
   const pointerDragRef = useRef<PointerDragState | null>(null);
   const wheelDistanceRef = useRef(0);
   const wheelResetRef = useRef<number | null>(null);
-  const previousValueRef = useRef(value);
-  const motionIdRef = useRef(0);
-  const [motion, setMotion] = useState<{ direction: 1 | -1; id: number } | null>(null);
+  const reelRef = useRef<HTMLSpanElement>(null);
+  const reelStateRef = useRef<{ value: number; index: number; animation: Animation | null } | null>(null);
 
-  useEffect(() => {
-    if (value === previousValueRef.current) return;
+  useLayoutEffect(() => {
+    const reel = reelRef.current;
+    if (!reel) return;
+
+    const state = reelStateRef.current;
+    const addNumber = (number: number, index: number, spacing: number) => {
+      const existing = reel.querySelector<HTMLElement>(`[data-index="${index}"]`);
+      if (existing) {
+        existing.textContent = padTimePart(number);
+        existing.style.top = `calc(50% + ${index * spacing}px)`;
+        return;
+      }
+      const item = document.createElement('span');
+      item.className = 'time-wheel-number';
+      item.dataset.index = String(index);
+      item.textContent = padTimePart(number);
+      item.style.top = `calc(50% + ${index * spacing}px)`;
+      reel.appendChild(item);
+    };
+    const reset = () => {
+      reel.replaceChildren();
+      reel.style.transform = 'translateY(0px)';
+      addNumber(value, 0, 0);
+      reelStateRef.current = { value, index: 0, animation: null };
+    };
+
+    if (!state) {
+      reset();
+      return;
+    }
+    if (value === state.value) return;
 
     const range = max + step;
-    const forwardDistance = (value - previousValueRef.current + range) % range;
-    const direction = forwardDistance === step ? 1 : -1;
-    previousValueRef.current = value;
-    motionIdRef.current += 1;
-    setMotion({ direction, id: motionIdRef.current });
+    const forward = (value - state.value + range) % range;
+    const backward = (state.value - value + range) % range;
+    const spacing = (wheelRef.current?.clientHeight ?? 0) * 0.7;
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if ((forward !== step && backward !== step) || !spacing || reducedMotion || typeof reel.animate !== 'function' || Math.abs(state.index) > 20) {
+      state.animation?.cancel();
+      reset();
+      return;
+    }
+
+    const currentTransform = getComputedStyle(reel).transform;
+    const currentOffset = currentTransform === 'none' ? 0 : new DOMMatrixReadOnly(currentTransform).m42;
+    state.animation?.cancel();
+    const nextIndex = state.index + (forward === step ? 1 : -1);
+    const targetOffset = -nextIndex * spacing;
+    addNumber(value, nextIndex, spacing);
+    reel.style.transform = `translateY(${targetOffset}px)`;
+    const animation = reel.animate(
+      [{ transform: `translateY(${currentOffset}px)` }, { transform: `translateY(${targetOffset}px)` }],
+      { duration: 280, easing: 'cubic-bezier(0.22, 0.75, 0.25, 1)' },
+    );
+    reelStateRef.current = { value, index: nextIndex, animation };
+    animation.onfinish = () => {
+      if (reelStateRef.current?.animation === animation) reset();
+    };
   }, [max, step, value]);
+
+  useEffect(() => () => reelStateRef.current?.animation?.cancel(), []);
 
   useEffect(() => {
     const wheel = wheelRef.current;
@@ -191,12 +242,7 @@ function TimeWheel({
       onPointerCancel={finishPointerDrag}
     >
       <span className="time-wheel-value" aria-hidden="true">
-        <span
-          key={`${value}-${motion?.id ?? 0}`}
-          className={`time-wheel-number${motion ? ` is-${motion.direction > 0 ? 'next' : 'previous'}` : ''}`}
-        >
-          {padTimePart(value)}
-        </span>
+        <span className="time-wheel-window"><span className="time-wheel-reel" ref={reelRef} /></span>
         <span className="time-wheel-unit">{unit}</span>
       </span>
     </div>
@@ -205,6 +251,7 @@ function TimeWheel({
 
 export default function TimeCarousel({ value, onChange }: TimeCarouselProps) {
   const { t } = useLanguage();
+  const { secondsStep } = useTeaSession();
   const valueRef = useRef(value);
 
   useEffect(() => {
@@ -226,9 +273,11 @@ export default function TimeCarousel({ value, onChange }: TimeCarouselProps) {
   const stepSeconds = useCallback((direction: 1 | -1) => {
     const currentMinutes = Math.floor(valueRef.current / 60);
     const currentSeconds = valueRef.current % 60;
-    const nextSeconds = (currentSeconds + direction * 10 + 60) % 60;
-    commitValue(currentMinutes, nextSeconds);
-  }, [commitValue]);
+    const nextSeconds = (currentSeconds + direction * secondsStep + 60) % 60;
+    const crossesMinute = direction === 1 ? nextSeconds < currentSeconds : nextSeconds > currentSeconds;
+    const nextMinutes = (currentMinutes + (crossesMinute ? direction : 0) + 60) % 60;
+    commitValue(nextMinutes, nextSeconds);
+  }, [commitValue, secondsStep]);
 
   const setMinutes = useCallback((minutes: number) => {
     commitValue(minutes, valueRef.current % 60);
@@ -256,8 +305,8 @@ export default function TimeCarousel({ value, onChange }: TimeCarouselProps) {
         />
         <TimeWheel
           ariaLabel={t('seconds')}
-          max={50}
-          step={10}
+          max={60 - secondsStep}
+          step={secondsStep}
           unit={'\u2033'}
           value={seconds}
           onStep={stepSeconds}
