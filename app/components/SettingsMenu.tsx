@@ -9,6 +9,7 @@ import {
   getUpdateInstaller,
   isAndroidApp,
   isUpdateCheckAvailable,
+  UPDATE_RETRY_INTERVAL_MS,
   type AppUpdateResult,
   type InstallStatus,
 } from '../lib/app-update';
@@ -48,11 +49,12 @@ export default function SettingsMenu() {
 
   useEffect(() => {
     if (!isAndroidApp()) return;
-    let active = true;
+    let mounted = true;
+    let appIsActive = true;
     const backgroundCheck = async () => {
       try {
         const result = await checkerRef.current();
-        if (active && result) {
+        if (mounted && result) {
           setUpdateResult(result);
           setUpdateAvailable(result.updateAvailable);
         }
@@ -62,9 +64,17 @@ export default function SettingsMenu() {
     };
     void backgroundCheck();
     const listener = App.addListener('appStateChange', ({ isActive }) => {
+      appIsActive = isActive;
       if (isActive) void backgroundCheck();
     });
-    return () => { active = false; void listener.then((handle) => handle.remove()).catch(() => {}); };
+    const checkTimer = window.setInterval(() => {
+      if (appIsActive) void backgroundCheck();
+    }, UPDATE_RETRY_INTERVAL_MS);
+    return () => {
+      mounted = false;
+      window.clearInterval(checkTimer);
+      void listener.then((handle) => handle.remove()).catch(() => {});
+    };
   }, []);
 
   useEffect(() => {

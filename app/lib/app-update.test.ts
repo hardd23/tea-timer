@@ -1,11 +1,14 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, CapacitorHttp } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { APP_VERSION, GITHUB_LATEST_RELEASE_API_URL, GITHUB_URL } from '../app-info';
 import { checkForAppUpdate, createUpdateChecker, getInstalledAppVersion, getUpdateInstaller, selectReleaseApk } from './app-update';
 
-vi.mock('@capacitor/core', () => ({ Capacitor: { getPlatform: vi.fn() } }));
+vi.mock('@capacitor/core', () => ({
+  Capacitor: { getPlatform: vi.fn() },
+  CapacitorHttp: { request: vi.fn() },
+}));
 vi.mock('@capacitor/app', () => ({ App: { getInfo: vi.fn() } }));
 
 const releaseUrl = `${GITHUB_URL}/releases/tag/v2.0.0`;
@@ -58,17 +61,39 @@ describe('app updates', () => {
     expect(selectReleaseApk([asset], 'v2.0.0-beta')).toBeUndefined();
   });
 
-  it('coalesces automatic checks, throttles attempts and allows a manual retry after failure', async () => {
+  it('coalesces automatic checks, retries sooner after a failure and throttles successful checks', async () => {
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(1_000);
     const result = { currentVersion: '2.0.0', latestVersion: '2.0.0', releaseUrl, updateAvailable: false };
     const check = vi.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValue(result);
-    const run = createUpdateChecker(check, 60_000);
+    const run = createUpdateChecker(check);
     const first = run();
     const simultaneous = run();
     expect(first).toBe(simultaneous);
     await expect(first).rejects.toThrow('offline');
     await expect(run()).resolves.toBeNull();
+    clock.mockReturnValue(61_000);
+    await expect(run()).resolves.toEqual(result);
+    clock.mockReturnValue(121_000);
+    await expect(run()).resolves.toBeNull();
     await expect(run(true)).resolves.toEqual(result);
-    expect(check).toHaveBeenCalledTimes(2);
+    expect(check).toHaveBeenCalledTimes(3);
+  });
+
+  it('waits for the GitHub rate limit to reset before retrying automatically', async () => {
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(1_000);
+    const fetchRelease = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      headers: new Headers({ 'x-ratelimit-remaining': '0', 'x-ratelimit-reset': '180' }),
+    });
+    vi.stubGlobal('fetch', fetchRelease);
+    const run = createUpdateChecker();
+    await expect(run()).rejects.toThrow('GitHub API returned 403');
+    clock.mockReturnValue(61_000);
+    await expect(run()).resolves.toBeNull();
+    clock.mockReturnValue(180_000);
+    await expect(run()).rejects.toThrow('GitHub API returned 403');
+    expect(fetchRelease).toHaveBeenCalledTimes(2);
   });
 
   it('rejects prereleases and untrusted release pages', async () => {
@@ -94,6 +119,37 @@ describe('app updates', () => {
     mockRelease('v1.0.1');
     await expect(checkForAppUpdate()).resolves.toMatchObject({ currentVersion: '1.0.0', updateAvailable: true });
     expect(App.getInfo).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([['1.0.0', true], ['2.0.0', false]] as const)(
+    'checks the public release page if the API is rate limited (installed: %s)',
+    async (version, updateAvailable) => {
+      vi.mocked(Capacitor.getPlatform).mockReturnValue('android');
+      vi.mocked(App.getInfo).mockResolvedValue({ name: 'Tea Timer', id: 'example', build: '1', version });
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 403 }));
+      vi.mocked(CapacitorHttp.request).mockResolvedValue({
+        status: 302, headers: { Location: releaseUrl }, url: `${GITHUB_URL}/releases/latest`, data: '',
+      });
+      await expect(checkForAppUpdate()).resolves.toEqual({
+        currentVersion: version, latestVersion: '2.0.0', releaseUrl, updateAvailable,
+      });
+      expect(CapacitorHttp.request).toHaveBeenCalledWith(expect.objectContaining({
+        url: `${GITHUB_URL}/releases/latest`, method: 'HEAD', disableRedirects: true,
+      }));
+    },
+  );
+
+  it.each([
+    'https://example.com/releases/tag/v2.0.0',
+    `${GITHUB_URL}/releases/tag/v2.0.0-beta`,
+  ])('rejects a fallback redirect to %s', async (location) => {
+    vi.mocked(Capacitor.getPlatform).mockReturnValue('android');
+    vi.mocked(App.getInfo).mockResolvedValue({ name: 'Tea Timer', id: 'example', build: '1', version: '1.0.0' });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 403 }));
+    vi.mocked(CapacitorHttp.request).mockResolvedValue({
+      status: 302, headers: { location }, url: `${GITHUB_URL}/releases/latest`, data: '',
+    });
+    await expect(checkForAppUpdate()).rejects.toThrow('GitHub API returned 403');
   });
 
   it.each([true, false])('clears the request timer after completion (success: %s)', async (success) => {

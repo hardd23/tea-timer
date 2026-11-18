@@ -17,7 +17,7 @@
   <a href="https://hardd23.github.io/tea-timer/"><img src="https://img.shields.io/badge/Website-GitHub_Pages-327452?style=flat-square" alt="App website on GitHub Pages"></a>
   <a href="https://my-tea-timer.vercel.app/"><img src="https://img.shields.io/badge/Web--version-Open-2e7d32?style=flat-square" alt="Open the web version"></a>
   <a href="https://github.com/hardd23/tea-timer/releases/latest"><img src="https://img.shields.io/badge/Android-APK-3ddc84?style=flat-square&amp;logo=android&amp;logoColor=white" alt="Download the Android APK"></a>
-  <a href="#whats-new-in-130"><img src="https://img.shields.io/badge/Version-1.3.0-397b59?style=flat-square" alt="Version 1.3.0"></a>
+  <a href="#whats-new-in-131"><img src="https://img.shields.io/badge/Version-1.3.1-397b59?style=flat-square" alt="Version 1.3.1"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-5f6b61?style=flat-square" alt="MIT License"></a>
 </p>
 
@@ -58,6 +58,10 @@ The screenshots show Tea Timer 1.3.0 in dark mode.
 | RU / EN | Russian and English interfaces without reloading the page. |
 | 💬 | 315 tea sayings in random order, with a 10-second reading pause. |
 | ↻ | Android update checks and verified APK downloads through GitHub Releases. |
+
+## What's New in 1.3.1
+
+- Android can check the public release page when the GitHub API is unavailable. If it finds a newer version, the menu shows the update indicators and links to the release.
 
 ## What's New in 1.3.0
 

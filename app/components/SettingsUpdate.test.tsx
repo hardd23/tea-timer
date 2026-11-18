@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock('@capacitor/app', () => ({ App: { addListener: mocks.listener } }));
 vi.mock('../lib/app-update', () => ({
+  UPDATE_RETRY_INTERVAL_MS: 60_000,
   checkForAppUpdate: vi.fn(),
   createUpdateChecker: () => mocks.check,
   isAndroidApp: () => true,
