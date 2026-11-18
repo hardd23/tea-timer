@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tea_timer_alerts">Сигналы чайного таймера</string>
+    <string name="tea_timer_brew_done">Заваривание завершено</string>
+    <string name="tea_timer_cooling_done">Время остывания истекло</string>
+</resources>

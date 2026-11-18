@@ -26,7 +26,10 @@ const getServerUpdateCheckSnapshot = () => false;
 
 export default function SettingsMenu() {
   const { language, setLanguage, t } = useLanguage();
-  const { adjustPourCount, pourCount, requestSessionReset, secondsStep, setSecondsStep } = useTeaSession();
+  const {
+    adjustCoolingDuration, adjustPourCount, coolingDurationMinutes, coolingEnabled,
+    pourCount, requestSessionReset, secondsStep, setCoolingEnabled, setSecondsStep,
+  } = useTeaSession();
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme } = useColorTheme();
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -239,6 +242,29 @@ export default function SettingsMenu() {
               <button type="button" onClick={() => setSecondsStep(10)} aria-pressed={secondsStep === 10}>10 {t('seconds')}</button>
             </div>
           </div>
+
+          <div className="settings-menu-row settings-pour-row">
+            <span id="settings-cooling-label">{t('coolingTimerSetting')}</span>
+            <button
+              type="button"
+              className="settings-cooling-toggle"
+              role="switch"
+              aria-labelledby="settings-cooling-label"
+              aria-checked={coolingEnabled}
+              onClick={() => setCoolingEnabled(!coolingEnabled)}
+            />
+          </div>
+
+          {coolingEnabled && (
+            <div className="settings-menu-row settings-pour-row">
+              <span>{t('coolingAlertAfter')}</span>
+              <div className="settings-pour-control" role="group" aria-label={t('coolingAlertAfter')}>
+                <button type="button" onClick={() => adjustCoolingDuration(-1)} aria-label={t('decreaseCoolingDuration')} disabled={coolingDurationMinutes === 1}>−</button>
+                <output aria-live="polite">{coolingDurationMinutes}</output>
+                <button type="button" onClick={() => adjustCoolingDuration(1)} aria-label={t('increaseCoolingDuration')} disabled={coolingDurationMinutes === 5}>+</button>
+              </div>
+            </div>
+          )}
 
           <div className="settings-menu-row settings-pour-row">
             <span>{t('pourCountSetting')}</span>

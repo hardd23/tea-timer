@@ -21,6 +21,10 @@ const translations = {
     settingsTitle: 'Настройки',
     closeSettings: 'Закрыть настройки',
     secondsStepSetting: 'Шаг таймера',
+    coolingTimerSetting: 'Сигнал остывания',
+    coolingAlertAfter: 'Время остывания',
+    decreaseCoolingDuration: 'Уменьшить время до сигнала',
+    increaseCoolingDuration: 'Увеличить время до сигнала',
     themeSetting: 'Тема оформления',
     colorThemeSetting: 'Цветовая тема',
     colorThemeLeaf: 'Чайный лист',
@@ -141,6 +145,10 @@ const translations = {
     settingsTitle: 'Settings',
     closeSettings: 'Close settings',
     secondsStepSetting: 'Timer step',
+    coolingTimerSetting: 'Cooling alert',
+    coolingAlertAfter: 'Cooling time',
+    decreaseCoolingDuration: 'Decrease time until alert',
+    increaseCoolingDuration: 'Increase time until alert',
     themeSetting: 'Theme',
     colorThemeSetting: 'Color theme',
     colorThemeLeaf: 'Tea leaf',
@@ -303,11 +311,6 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = language;
-    try {
-      window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-    } catch {
-      // The selected language still applies for the current session.
-    }
   }, [language]);
 
   const setLanguage = useCallback((nextLanguage: Language) => applyLanguage(nextLanguage), []);

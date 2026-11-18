@@ -17,13 +17,13 @@
   <a href="https://hardd23.github.io/tea-timer/"><img src="https://img.shields.io/badge/Website-GitHub_Pages-327452?style=flat-square" alt="App website on GitHub Pages"></a>
   <a href="https://my-tea-timer.vercel.app/"><img src="https://img.shields.io/badge/Web--version-Open-2e7d32?style=flat-square" alt="Open the web version"></a>
   <a href="https://github.com/hardd23/tea-timer/releases/latest"><img src="https://img.shields.io/badge/Android-APK-3ddc84?style=flat-square&amp;logo=android&amp;logoColor=white" alt="Download the Android APK"></a>
-  <a href="https://github.com/hardd23/tea-timer/releases/tag/v1.2.0"><img src="https://img.shields.io/badge/Version-1.2.0-397b59?style=flat-square" alt="Version 1.2.0"></a>
+  <a href="#whats-new-in-130"><img src="https://img.shields.io/badge/Version-1.3.0-397b59?style=flat-square" alt="Version 1.3.0"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-5f6b61?style=flat-square" alt="MIT License"></a>
 </p>
 
 ## Tea Timer Interface
 
-The screenshots below show the 1.1.1 interface. Version 1.2.0 has updated timer labels, settings, and full-screen dialogs; new screenshots are pending.
+The screenshots show Tea Timer 1.3.0 in dark mode.
 
 <p align="center">
   <img src="./assets/readme/screenshots/tea-timer-idle.png" width="218" alt="Tea Timer — selecting minutes and seconds before starting">
@@ -43,7 +43,7 @@ The screenshots below show the 1.1.1 interface. Version 1.2.0 has updated timer 
   <p align="center">
     <img src="./assets/readme/screenshots/tea-timer-wisdom.png" width="218" alt="Tea Timer — tea saying">
     &nbsp;
-    <img src="./assets/readme/screenshots/tea-timer-settings.png" width="218" alt="Tea Timer — theme, language, and infusion settings">
+    <img src="./assets/readme/screenshots/tea-timer-settings.png" width="218" alt="Tea Timer — theme, language, cooling alert, and infusion settings">
   </p>
 </details>
 
@@ -52,19 +52,19 @@ The screenshots below show the 1.1.1 interface. Version 1.2.0 has updated timer 
 | | Feature |
 | --- | --- |
 | ⏳ | Minute and second wheels with gesture, mouse wheel, and keyboard controls; choose 5- or 10-second steps. |
-| 🍵 | Two timer phases: brewing until zero and cooling time after it. |
+| 🍵 | Brewing countdown followed by a cooling timer, with a brewing signal and an optional second alert after 1–5 minutes. |
 | 🔢 | Infusion counter with automatic tracking and manual adjustment in settings — up to 99. |
 | 🌗 | Light and dark modes with three independently selectable accent palettes, remembered on the device. |
 | RU / EN | Russian and English interfaces without reloading the page. |
 | 💬 | 315 tea sayings in random order, with a 10-second reading pause. |
 | ↻ | Android update checks and verified APK downloads through GitHub Releases. |
 
-## What's New in 1.2.0
+## What's New in 1.3.0
 
-- Select 5- or 10-second steps; scrolling seconds across zero adjusts minutes in either direction.
-- Smooth time wheels, full-screen settings and sayings, and a 10-second pause between sayings.
-- Brewing and cooling status labels, plus tea leaf, warm amber, and plum accents in either light or dark mode.
-- Android checks for stable updates, downloads a verified APK, and hands installation to Android.
+- Set the cooling alert to sound after 1–5 minutes or turn it off while the cooling timer keeps running.
+- Larger wheel digits, minute and second marks inside the frames, and matching regular-weight digits during brewing and cooling.
+- Neutral timer digits in every theme, a header mark that matches the Start button, and a simpler adaptive Android icon.
+- The timer phase and infusion count are saved as part of the tea session.
 
 The download link above points to the latest published release.
 
@@ -72,10 +72,11 @@ The download link above points to the latest published release.
 
 1. Select minutes and seconds on the vertical wheels and press “Start.”
 2. During brewing, the timer border shows the countdown progress.
-3. When time runs out, the timer automatically switches to cooling mode, and the counter adds an infusion.
-4. Open settings and select “Reset tea session” to start over.
+3. When brewing ends, the first signal sounds, the timer displays cooling time with a minus sign, and the counter adds an infusion.
+4. Use Settings to choose the cooling duration or turn the second signal off.
+5. Select “Reset tea session” in Settings to start over.
 
-The timer uses the exact end time, so it restores the correct result after the tab is minimized or the screen is locked.
+Tea Timer uses the saved session and actual brew end time to restore the timer phase and infusion count when you reopen the app. On Android, allow notifications and alarms for alerts while the screen is locked.
 
 ## Open or Install
 
@@ -89,11 +90,11 @@ Open [my-tea-timer.vercel.app](https://my-tea-timer.vercel.app/) in a modern bro
 
 ### Android
 
-Download the latest `Tea-Timer-*.apk` file from the [Releases](https://github.com/hardd23/tea-timer/releases/latest) page, open it on your Android device, and confirm the installation. The APK is signed with the app's permanent key, so future versions can be installed over previous ones.
+Download the latest `Tea-Timer-*.apk` file from the [Releases](https://github.com/hardd23/tea-timer/releases/latest) page, open it on your Android device, and confirm the installation. Install the APK over an existing copy signed with the same certificate to keep data saved by that version.
 
 > Android may ask you to allow app installation from this source — this is a standard system message for APK files downloaded outside Google Play.
 
-Starting with version 1.2.0, the app can check for a stable update and download its verified APK from GitHub. Android may ask you to allow installation from Tea Timer or confirm the update; installation is complete only when Android reports success. If a suitable APK cannot be verified, the app offers the release page instead.
+In Settings, choose “Check for updates” to find the latest stable release and download its verified APK from GitHub. Android may ask you to allow installation from Tea Timer and confirm the update. If a suitable APK cannot be verified, the app offers the release page instead.
 
 ## Tech Stack
 

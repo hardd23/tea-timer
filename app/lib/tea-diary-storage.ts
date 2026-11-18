@@ -14,7 +14,8 @@ function validState(value: unknown): value is DiaryState {
       || !Number.isFinite(session.lastActivity) || !(session.endedAt === null || Number.isFinite(session.endedAt))
       || !Number.isInteger(session.count) || session.count < 0 || session.count > 99
       || !Number.isInteger(session.quotes) || session.quotes < 0 || typeof session.note !== 'string'
-      || session.note.length > 500 || !Array.isArray(session.actions)) return false;
+      || session.note.length > 500 || !Array.isArray(session.actions)
+      || (session.persistent !== undefined && session.persistent !== true)) return false;
     ids.add(session.id);
     for (const action of session.actions) {
       if (!action || typeof action.id !== 'string' || !Number.isFinite(action.at)
@@ -62,10 +63,12 @@ export async function readDiary(): Promise<DiaryState> {
   });
 }
 
-export async function writeDiaryEvent(event: DiaryEvent): Promise<DiaryState> {
+export const writeDiaryEvent = (event: DiaryEvent) => writeDiaryEvents([event]);
+
+export async function writeDiaryEvents(events: readonly DiaryEvent[]): Promise<DiaryState> {
   const db = await openDiary();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE, 'readwrite');
+    const transaction = db.transaction(STORE, 'readwrite', { durability: 'strict' });
     const store = transaction.objectStore(STORE);
     const request = store.get(KEY);
     let next: DiaryState | null = null;
@@ -78,7 +81,7 @@ export async function writeDiaryEvent(event: DiaryEvent): Promise<DiaryState> {
         return;
       }
       try {
-        next = applyDiaryEvent(value === undefined ? emptyDiary() : value as DiaryState, event);
+        next = events.reduce(applyDiaryEvent, value === undefined ? emptyDiary() : value as DiaryState);
         if (!validState(next)) throw new Error('Diary event would create invalid data');
         store.put(next, KEY);
       } catch (error) {

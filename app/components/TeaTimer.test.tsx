@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { App, type AppState } from '@capacitor/app';
+import { IDBFactory } from 'fake-indexeddb';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { LanguageProvider } from './LanguageContext';
 import { TeaSessionProvider } from './TeaSessionContext';
@@ -9,6 +11,13 @@ import SessionResetButton from './SessionResetButton';
 import SettingsMenu from './SettingsMenu';
 import TeaWisdom from './TeaWisdom';
 import Home from '../page';
+import { DiaryProvider } from './DiaryContext';
+import { readDiary, writeDiaryEvent } from '../lib/tea-diary-storage';
+import * as sessionStorage from '../lib/tea-session';
+
+vi.mock('@capacitor/app', () => ({
+  App: { addListener: async () => ({ remove: async () => {} }) },
+}));
 
 const play = vi.fn().mockResolvedValue(undefined);
 
@@ -63,7 +72,6 @@ it.each(['Light', 'Dark'])('changes color themes independently in %s mode', (mod
     expect(window.localStorage.getItem('tea-timer-color-theme')).toBe(value);
     expect(document.documentElement.dataset.colorTheme).toBe(value);
     expect(document.documentElement.dataset.theme).toBe(mode.toLowerCase());
-    expect(document.querySelector<HTMLElement>('.active-timer-section')?.style.getPropertyValue('--cooling-progress-color')).toBe('#72b7ff');
   }
 });
 
@@ -263,7 +271,56 @@ it.each([
   act(() => { vi.advanceTimersByTime(10_000); });
   expect(label?.textContent).toBe(cooling);
   expect(label?.getAttribute('data-phase')).toBe('cooling');
-  expect(label?.parentElement?.style.getPropertyValue('--cooling-progress-color')).toBe('#72b7ff');
+});
+
+it('redraws the current Canvas phase with its CSS color on theme changes', () => {
+  const context = {
+    setTransform: vi.fn(),
+    clearRect: vi.fn(),
+    beginPath: vi.fn(),
+    moveTo: vi.fn(),
+    lineTo: vi.fn(),
+    arc: vi.fn(),
+    setLineDash: vi.fn(),
+    stroke: vi.fn(),
+    strokeStyle: '',
+  };
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext')
+    .mockReturnValue(context as unknown as CanvasRenderingContext2D);
+  const { container } = render(
+    <LanguageProvider><TeaSessionProvider><TeaTimer /></TeaSessionProvider></LanguageProvider>,
+  );
+  const canvas = container.querySelector('canvas')!;
+  vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 160, 88));
+  canvas.style.setProperty('--color-brewing-progress', '#88d982');
+  canvas.style.setProperty('--color-text-primary', '#263229');
+
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+  expect(context.strokeStyle).toBe('#88d982');
+  expect(context.lineTo.mock.calls[0]).toEqual([12, 1]);
+
+  canvas.style.setProperty('--color-brewing-progress', '#c58a3a');
+  act(() => { window.dispatchEvent(new Event('tea-timer-color-theme-change')); });
+  expect(context.strokeStyle).toBe('#c58a3a');
+
+  act(() => { vi.advanceTimersByTime(10_000); });
+  context.lineTo.mockClear();
+  act(() => { vi.advanceTimersByTime(1000); });
+  expect(context.strokeStyle).toBe('#263229');
+  expect(context.lineTo.mock.calls[0]).toEqual([148, 1]);
+
+  vi.setSystemTime(new Date('2026-01-01T00:03:10Z'));
+  act(() => { window.dispatchEvent(new Event('pageshow')); });
+  expect(canvas.classList.contains('active-timer-progress-ready')).toBe(true);
+
+  canvas.style.setProperty('--color-text-primary', '#e8eae8');
+  act(() => { window.dispatchEvent(new Event('tea-timer-theme-change')); });
+  expect(context.strokeStyle).toBe('#e8eae8');
+  expect(canvas.classList.contains('active-timer-progress-ready')).toBe(true);
+
+  canvas.style.setProperty('--color-brewing-progress', '#dbadd5');
+  act(() => { window.dispatchEvent(new Event('tea-timer-color-theme-change')); });
+  expect(context.strokeStyle).toBe('#e8eae8');
 });
 
 it('brews for ten seconds, then starts cooling and records one pour', () => {
@@ -411,4 +468,142 @@ it('resets the tea session after a completed brew', () => {
   expect(container.querySelector('.brew-counter-value')?.textContent).toBe('0');
   expect(container.querySelector('.active-timer')?.getAttribute('data-phase')).toBe('idle');
   expect(play).toHaveBeenCalledTimes(1);
+});
+
+const renderSession = () => render(
+  <LanguageProvider><TeaSessionProvider><SettingsMenu /><TeaTimer /></TeaSessionProvider></LanguageProvider>,
+);
+
+it('restores the selected duration, same timer and remaining time after a web reload', () => {
+  const first = renderSession();
+  fireEvent.keyDown(screen.getByRole('spinbutton', { name: 'sec' }), { key: 'ArrowUp' });
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+  const saved = sessionStorage.readWebTeaSession();
+  expect(saved?.timer).toMatchObject({ duration: 20, phase: 'brewing' });
+
+  const write = vi.spyOn(Storage.prototype, 'setItem');
+  act(() => { vi.advanceTimersByTime(4000); });
+  expect(write.mock.calls.filter(([key]) => key === sessionStorage.TEA_SESSION_KEY)).toHaveLength(0);
+  first.unmount();
+  vi.setSystemTime(new Date('2026-01-01T00:00:08Z'));
+  document.documentElement.dataset.theme = 'dark';
+  document.documentElement.dataset.colorTheme = 'plum';
+  renderSession();
+
+  expect(screen.getByLabelText('00:12 remaining')).toBeTruthy();
+  expect(screen.getByRole('spinbutton', { name: 'sec' }).getAttribute('aria-valuenow')).toBe('20');
+  expect(sessionStorage.readWebTeaSession()?.timer?.id).toBe(saved?.timer?.id);
+  expect(document.documentElement.dataset.colorTheme).toBe('plum');
+  expect(play).not.toHaveBeenCalled();
+});
+
+it('reconciles an expired brew once across repeated reloads and a long absence', () => {
+  const first = renderSession();
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+  first.unmount();
+  vi.setSystemTime(new Date('2026-01-01T00:00:40Z'));
+  const second = renderSession();
+  expect(screen.getByLabelText('-00:30 cooling')).toBeTruthy();
+  expect(second.container.querySelector('.brew-counter-value')?.textContent).toBe('1');
+  second.unmount();
+
+  vi.setSystemTime(new Date('2026-01-01T00:47:30Z'));
+  const third = renderSession();
+  expect(screen.getByLabelText('-47:20 cooling')).toBeTruthy();
+  expect(third.container.querySelector('.brew-counter-value')?.textContent).toBe('1');
+  expect(play).not.toHaveBeenCalled();
+});
+
+it('keeps a stopped session and its count, then discards them after a confirmed reset', () => {
+  const first = renderSession();
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+  act(() => { vi.advanceTimersByTime(10_000); });
+  fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
+  first.unmount();
+
+  const second = render(<LanguageProvider><TeaSessionProvider><SessionResetButton /><TeaTimer /></TeaSessionProvider></LanguageProvider>);
+  expect(second.container.querySelector('.active-timer')?.getAttribute('data-phase')).toBe('idle');
+  expect(second.container.querySelector('.brew-counter-value')?.textContent).toBe('1');
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Start a new tea session' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+  second.unmount();
+
+  const third = renderSession();
+  expect(third.container.querySelector('.active-timer')?.getAttribute('data-phase')).toBe('idle');
+  expect(third.container.querySelector('.brew-counter-value')?.textContent).toBe('0');
+  expect(sessionStorage.readWebTeaSession()).toMatchObject({ sessionId: null, timer: null, durationSeconds: 10 });
+});
+
+it.each(['invalid JSON', JSON.stringify({
+  ...sessionStorage.emptyTeaSession(), sessionId: 'session', pourCount: 3,
+  timer: { id: 'timer', duration: 10, startedAt: 1000, endAt: 1200, phase: 'brewing' },
+})])('ignores damaged saved data and permits a new tea session', (payload) => {
+  window.localStorage.setItem(sessionStorage.TEA_SESSION_KEY, payload);
+  const view = renderSession();
+  expect(view.container.querySelector('.brew-counter-value')?.textContent).toBe('0');
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+  expect(sessionStorage.readWebTeaSession()?.timer?.duration).toBe(10);
+});
+
+it('waits for native restoration and immediately reconciles time on Capacitor resume', async () => {
+  vi.spyOn(sessionStorage, 'usesNativeTeaSession').mockReturnValue(true);
+  const listeners = new Set<(state: AppState) => void>();
+  vi.spyOn(App, 'addListener').mockImplementation(async (_name, handler) => {
+    const onState = handler as unknown as (state: AppState) => void;
+    listeners.add(onState);
+    return { remove: async () => { listeners.delete(onState); } };
+  });
+  let load!: (saved: sessionStorage.SavedTeaSession) => void;
+  const read = vi.spyOn(sessionStorage, 'readNativeTeaSession')
+    .mockImplementationOnce(() => new Promise((resolve) => { load = resolve; }));
+  const write = vi.spyOn(sessionStorage, 'writeNativeTeaSession').mockResolvedValue(undefined);
+  const startedAt = Date.now() - 2000;
+  const saved: sessionStorage.SavedTeaSession = {
+    ...sessionStorage.emptyTeaSession(), sessionId: 'native-session',
+    timer: { id: 'native-timer', startedAt, endAt: startedAt + 10000, duration: 10, phase: 'brewing' },
+  };
+  const first = render(<LanguageProvider><TeaSessionProvider><TeaTimer /></TeaSessionProvider></LanguageProvider>);
+  expect(screen.queryByRole('button', { name: 'Start' })).toBeNull();
+  expect(write).not.toHaveBeenCalled();
+  await act(async () => { load(saved); });
+  expect(screen.getByLabelText('00:08 remaining')).toBeTruthy();
+
+  vi.setSystemTime(startedAt + 14_000);
+  await act(async () => { listeners.forEach((listener) => listener({ isActive: true })); });
+  expect(screen.getByLabelText('-00:04 cooling')).toBeTruthy();
+  expect(write).toHaveBeenCalledTimes(1);
+  const committed = write.mock.calls[0][0];
+  expect(committed.timer?.phase).toBe('cooling');
+  first.unmount();
+  read.mockResolvedValueOnce(committed);
+  await act(async () => { render(<LanguageProvider><TeaSessionProvider><TeaTimer /></TeaSessionProvider></LanguageProvider>); });
+  expect(screen.getByLabelText('-00:04 cooling')).toBeTruthy();
+  expect(write).toHaveBeenCalledTimes(1);
+});
+
+it('replays a pending completion alongside existing IndexedDB history without counting twice', async () => {
+  vi.useRealTimers();
+  vi.stubGlobal('indexedDB', new IDBFactory());
+  const endAt = Date.now() - 40 * 60_000;
+  const startedAt = endAt - 10_000;
+  await writeDiaryEvent({ type: 'start', id: 'archive', at: startedAt - 30_000, duration: 10, timerId: 'archived' });
+  await writeDiaryEvent({ type: 'reset', id: 'archive-reset', at: startedAt - 5000 });
+  const start = { type: 'start', id: 'start:saved-brew', timerId: 'saved-brew', sessionId: 'saved-session', at: startedAt, duration: 10 } as const;
+  const done = { type: 'complete', id: 'complete:saved-brew', timerId: 'saved-brew', sessionId: 'saved-session', at: endAt } as const;
+  await writeDiaryEvent(start);
+  await writeDiaryEvent(done);
+  sessionStorage.writeWebTeaSession({
+    ...sessionStorage.emptyTeaSession(), sessionId: start.sessionId, pourCount: 1,
+    timer: { id: start.timerId, duration: 10, startedAt, endAt, phase: 'cooling', coolingDurationMs: 180_000, coolingAlertEnabled: true, coolingAlertHandled: false },
+    pendingDiary: [start, done],
+  });
+  const view = render(<LanguageProvider><DiaryProvider><TeaSessionProvider><TeaTimer /></TeaSessionProvider></DiaryProvider></LanguageProvider>);
+  await waitFor(() => expect(sessionStorage.readWebTeaSession()?.pendingDiary).toEqual([]));
+  expect(view.container.querySelector('.brew-counter-value')?.textContent).toBe('1');
+  const state = await readDiary();
+  expect(state.activeId).toBe(start.sessionId);
+  expect(state.sessions.map((item) => item.id)).toEqual(['archive', start.sessionId]);
+  expect(state.sessions[1].actions.filter((action) => action.type === 'complete')).toHaveLength(1);
+  expect(state.sessions[1].count).toBe(1);
 });

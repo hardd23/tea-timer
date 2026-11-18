@@ -9,7 +9,8 @@ import React, {
 import TimeCarousel from './TimeCarousel';
 import { useLanguage } from './LanguageContext';
 import { useTeaSession } from './TeaSessionContext';
-import { useDiary } from './DiaryContext';
+import { App } from '@capacitor/app';
+import { usesNativeTeaSession } from '../lib/tea-session';
 import {
   getBrewingProgress,
   getBrewingRemainingSeconds,
@@ -17,68 +18,45 @@ import {
   getCoolingProgress,
 } from '../lib/timer-time';
 
-interface CompletedTimer {
-  id: string;
-  label: string;
-  endAt: number;
-}
-
 type TimerPhase = 'brewing' | 'cooling';
 
-interface TimerInstance {
-  id: string;
-  initialTime: number;
-  endAt: number;
-  timeLeft: number;
-  isRunning: boolean;
-  timerPhase: TimerPhase;
-  label: string;
-}
-
-const COOLING_DURATION_MS = 3 * 60 * 1000;
-const BREWING_PROGRESS_COLOR = '#88d982';
-const COOLING_PROGRESS_COLOR = '#72b7ff';
 
 const TeaTimer: React.FC = () => {
   const { language, t } = useLanguage();
-  const recordDiary = useDiary()?.record;
   const {
     completePour,
+    completeCoolingAlert,
     durationSeconds,
     setDurationSeconds,
     pourCount,
     registerSessionResetHandler,
-    resetPourCount,
+    resetSession,
     setIsTeaCoolingTooLong,
+    startTimer,
+    stopTimer,
+    timer,
   } = useTeaSession();
-  const [activeTimers, setActiveTimers] = useState<TimerInstance[]>([]);
-  const [currentDisplayTimerId, setCurrentDisplayTimerId] = useState<string | null>(null);
+  const [now, setNow] = useState(Date.now);
   const [isResetPopupOpen, setIsResetPopupOpen] = useState(false);
   const progressCanvasRef = useRef<HTMLCanvasElement>(null);
   const resetPopupRef = useRef<HTMLDivElement>(null);
   const resetInProgressRef = useRef(false);
   const progressValueRef = useRef(0);
-  const progressColorRef = useRef(BREWING_PROGRESS_COLOR);
-  const progressFrameRef = useRef<number | null>(null);
-  const coolingStartedRef = useRef<Set<string>>(new Set());
-  const completedTimerIdsRef = useRef<Set<string>>(new Set());
+  const progressPhaseRef = useRef<TimerPhase>('brewing');
+  const mountedAt = useRef(now);
 
-  const currentDisplayTimer = activeTimers.find(
-    (timer) => timer.id === currentDisplayTimerId,
-  );
-  const hasActiveCountdown = Boolean(currentDisplayTimer?.isRunning);
-  const isBrewingActive = currentDisplayTimer?.timerPhase === 'brewing';
-  const progressTimerId = currentDisplayTimer?.id;
-  const progressTimerPhase = currentDisplayTimer?.timerPhase;
-  const progressTimerIsRunning = currentDisplayTimer?.isRunning;
-  const progressEndAt = currentDisplayTimer?.endAt;
-  const progressTimerLabel = currentDisplayTimer?.label;
-  const progressDurationMs = (currentDisplayTimer?.initialTime ?? 0) * 1000;
-  const isTeaCoolingTooLong = Boolean(
-    currentDisplayTimer?.isRunning &&
-      currentDisplayTimer.timerPhase === 'cooling' &&
-      currentDisplayTimer.timeLeft < -180,
-  );
+  const progressTimerId = timer?.id;
+  const progressTimerPhase = timer?.phase;
+  const progressEndAt = timer?.endAt;
+  const progressDurationMs = (timer?.duration ?? 0) * 1000;
+  const coolingDurationMs = timer?.phase === 'cooling' && timer.coolingAlertEnabled ? timer.coolingDurationMs : 0;
+  const timeLeft = timer
+    ? timer.phase === 'cooling'
+      ? -getCoolingElapsedSeconds(now - timer.endAt)
+      : getBrewingRemainingSeconds(timer.endAt - Math.max(now, timer.startedAt))
+    : 0;
+  const isBrewingActive = timer?.phase === 'brewing';
+  const isTeaCoolingTooLong = coolingDurationMs > 0 && -timeLeft * 1000 >= coolingDurationMs;
 
   const getPourWord = (count: number) => {
     if (language === 'en') return t('pourMany');
@@ -137,17 +115,18 @@ const TeaTimer: React.FC = () => {
     [openResetPopup, registerSessionResetHandler],
   );
 
-  const setProgressBorderProgress = useCallback((progress: number, color: string) => {
+  const setProgressBorderProgress = useCallback((progress: number, phase: TimerPhase) => {
     const canvas = progressCanvasRef.current;
 
     if (!canvas) return;
 
     const clampedProgress = Math.max(0, Math.min(1, progress));
     progressValueRef.current = clampedProgress;
-    progressColorRef.current = color;
+    progressPhaseRef.current = phase;
+    const isCooling = phase === 'cooling';
     canvas.classList.toggle(
       'active-timer-progress-ready',
-      color === COOLING_PROGRESS_COLOR && clampedProgress >= 1,
+      isCooling && clampedProgress >= 1,
     );
 
     const bounds = canvas.getBoundingClientRect();
@@ -183,7 +162,7 @@ const TeaTimer: React.FC = () => {
 
     context.beginPath();
     context.moveTo(width / 2, top);
-    if (color === COOLING_PROGRESS_COLOR) {
+    if (isCooling) {
       context.lineTo(right - radius, top);
       context.arc(right - radius, top + radius, radius, -Math.PI / 2, 0);
       context.lineTo(right, bottom - radius);
@@ -207,9 +186,8 @@ const TeaTimer: React.FC = () => {
     context.lineWidth = 2;
     context.lineCap = 'round';
     context.lineJoin = 'round';
-    context.strokeStyle = color === BREWING_PROGRESS_COLOR
-      ? getComputedStyle(canvas).getPropertyValue('--color-brewing-progress').trim() || BREWING_PROGRESS_COLOR
-      : color;
+    const colorToken = isCooling ? '--color-text-primary' : '--color-brewing-progress';
+    context.strokeStyle = getComputedStyle(canvas).getPropertyValue(colorToken).trim();
     context.setLineDash([perimeter * clampedProgress, perimeter]);
     context.lineDashOffset = 0;
     context.stroke();
@@ -220,11 +198,9 @@ const TeaTimer: React.FC = () => {
     const canvas = progressCanvasRef.current;
     if (!canvas) return;
 
-    const resizeObserver = new ResizeObserver(() => {
-      setProgressBorderProgress(progressValueRef.current, progressColorRef.current);
-    });
+    const redraw = () => setProgressBorderProgress(progressValueRef.current, progressPhaseRef.current);
+    const resizeObserver = new ResizeObserver(redraw);
     resizeObserver.observe(canvas);
-    const redraw = () => setProgressBorderProgress(progressValueRef.current, progressColorRef.current);
     window.addEventListener('tea-timer-color-theme-change', redraw);
     window.addEventListener('tea-timer-theme-change', redraw);
 
@@ -235,197 +211,69 @@ const TeaTimer: React.FC = () => {
     };
   }, [setProgressBorderProgress]);
 
-  const recordCompletedTimer = useCallback((timer: CompletedTimer) => {
-    if (completedTimerIdsRef.current.has(timer.id)) return;
-
-    completedTimerIdsRef.current.add(timer.id);
-    completePour(timer.id, timer.endAt);
-  }, [completePour]);
-
-  const startCooling = useCallback((timer: CompletedTimer, overtimeSeconds: number) => {
-    const { id: timerId } = timer;
-
-    if (coolingStartedRef.current.has(timerId)) return;
-
-    coolingStartedRef.current.add(timerId);
-    recordCompletedTimer(timer);
-    setProgressBorderProgress(0, COOLING_PROGRESS_COLOR);
-
-    setActiveTimers((prevTimers) =>
-      prevTimers.map((activeTimer) =>
-        activeTimer.id === timerId
-          ? {
-              ...activeTimer,
-              timeLeft: overtimeSeconds > 0 ? -overtimeSeconds : 0,
-              isRunning: true,
-              timerPhase: 'cooling',
-            }
-          : activeTimer,
-      ),
-    );
-
-    void new Audio('/notification.mp3').play().catch(() => undefined);
-  }, [recordCompletedTimer, setProgressBorderProgress]);
-
   const syncTimerState = useCallback(() => {
-    if (
-      !progressTimerId ||
-      !progressTimerLabel ||
-      !progressTimerIsRunning ||
-      progressEndAt === undefined ||
-      progressDurationMs <= 0
-    ) {
-      return;
-    }
+    if (!progressTimerId || progressEndAt === undefined || !progressTimerPhase) return;
 
-    const remainingMs = progressEndAt - Date.now();
-
+    const currentTime = Date.now();
+    setNow(currentTime);
     if (progressTimerPhase === 'cooling') {
-      const overtimeSeconds = getCoolingElapsedSeconds(-remainingMs);
-      const coolingTimeLeft = overtimeSeconds > 0 ? -overtimeSeconds : 0;
-
-      const coolingProgress = getCoolingProgress(-remainingMs, COOLING_DURATION_MS);
-      setProgressBorderProgress(coolingProgress, COOLING_PROGRESS_COLOR);
-      setActiveTimers((prevTimers) => {
-        let didChange = false;
-        const nextTimers = prevTimers.map((timer) => {
-          if (timer.id !== progressTimerId || timer.timeLeft === coolingTimeLeft) {
-            return timer;
-          }
-
-          didChange = true;
-          return { ...timer, timeLeft: coolingTimeLeft };
-        });
-
-        return didChange ? nextTimers : prevTimers;
-      });
-      return;
+      if (coolingDurationMs === 0) return;
+      const coolingEndsAt = progressEndAt + coolingDurationMs;
+      setProgressBorderProgress(getCoolingProgress(currentTime - progressEndAt, coolingDurationMs), 'cooling');
+      if (currentTime >= coolingEndsAt) completeCoolingAlert(progressTimerId, mountedAt.current < coolingEndsAt);
+    } else if (currentTime >= progressEndAt) {
+      completePour(progressTimerId, mountedAt.current < progressEndAt);
     }
-
-    const progress = getBrewingProgress(remainingMs, progressDurationMs);
-
-    setProgressBorderProgress(progress, BREWING_PROGRESS_COLOR);
-
-    if (remainingMs <= 0) {
-      const overtimeSeconds = getCoolingElapsedSeconds(-remainingMs);
-      startCooling(
-        { id: progressTimerId, label: progressTimerLabel, endAt: progressEndAt },
-        overtimeSeconds,
-      );
-      return;
-    }
-
-    const remainingSeconds = getBrewingRemainingSeconds(remainingMs);
-    setActiveTimers((prevTimers) => {
-      let didChange = false;
-      const nextTimers = prevTimers.map((timer) => {
-        if (timer.id !== progressTimerId || timer.timeLeft === remainingSeconds) {
-          return timer;
-        }
-
-        didChange = true;
-        return { ...timer, timeLeft: remainingSeconds };
-      });
-
-      return didChange ? nextTimers : prevTimers;
-    });
-  }, [
-    progressDurationMs,
-    progressEndAt,
-    progressTimerId,
-    progressTimerIsRunning,
-    progressTimerLabel,
-    progressTimerPhase,
-    setProgressBorderProgress,
-    startCooling,
-  ]);
+  }, [completeCoolingAlert, completePour, coolingDurationMs, progressEndAt, progressTimerId, progressTimerPhase, setProgressBorderProgress]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        syncTimerState();
-      }
+      if (document.visibilityState === 'visible') syncTimerState();
     };
-    const handlePageShow = () => syncTimerState();
     const timerInterval = window.setInterval(syncTimerState, 1000);
-
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('pageshow', handlePageShow);
+    window.addEventListener('pageshow', syncTimerState);
+    const listener = usesNativeTeaSession() ? App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) syncTimerState();
+    }) : undefined;
 
     return () => {
       window.clearInterval(timerInterval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('pageshow', syncTimerState);
+      void listener?.then((handle) => handle.remove()).catch(() => {});
     };
   }, [syncTimerState]);
 
   useEffect(() => {
-    if (progressFrameRef.current !== null) {
-      cancelAnimationFrame(progressFrameRef.current);
-      progressFrameRef.current = null;
+    if (!progressTimerId || progressEndAt === undefined || !progressTimerPhase) {
+      setProgressBorderProgress(0, 'brewing');
+      return;
     }
-
-    if (
-      !progressTimerId ||
-      !progressTimerLabel ||
-      (progressTimerPhase !== 'brewing' && progressTimerPhase !== 'cooling') ||
-      !progressTimerIsRunning ||
-      progressEndAt === undefined ||
-      progressDurationMs <= 0
-    ) {
-      setProgressBorderProgress(0, BREWING_PROGRESS_COLOR);
+    if (progressTimerPhase === 'cooling' && coolingDurationMs === 0) {
+      setProgressBorderProgress(0, 'cooling');
       return;
     }
 
+    let frame: number | undefined;
     const updateProgress = () => {
-      const now = Date.now();
-
+      const remainingMs = progressEndAt - Date.now();
       if (progressTimerPhase === 'cooling') {
-        const coolingProgress = getCoolingProgress(now - progressEndAt, COOLING_DURATION_MS);
-        setProgressBorderProgress(coolingProgress, COOLING_PROGRESS_COLOR);
-
-        if (coolingProgress < 1) {
-          progressFrameRef.current = requestAnimationFrame(updateProgress);
-        } else {
-          progressFrameRef.current = null;
-        }
-        return;
-      }
-
-      const remainingMs = progressEndAt - now;
-      const progress = getBrewingProgress(remainingMs, progressDurationMs);
-      setProgressBorderProgress(progress, BREWING_PROGRESS_COLOR);
-
-      if (progress > 0) {
-        progressFrameRef.current = requestAnimationFrame(updateProgress);
+        const progress = getCoolingProgress(-remainingMs, coolingDurationMs);
+        setProgressBorderProgress(progress, 'cooling');
+        if (progress < 1) frame = requestAnimationFrame(updateProgress);
+        else syncTimerState();
       } else {
-        progressFrameRef.current = null;
-        const overtimeSeconds = getCoolingElapsedSeconds(Date.now() - progressEndAt);
-        startCooling(
-          { id: progressTimerId, label: progressTimerLabel, endAt: progressEndAt },
-          overtimeSeconds,
-        );
+        const progress = getBrewingProgress(remainingMs, progressDurationMs);
+        setProgressBorderProgress(progress, 'brewing');
+        if (remainingMs > 0) frame = requestAnimationFrame(updateProgress);
+        else syncTimerState();
       }
     };
 
     updateProgress();
-
-    return () => {
-      if (progressFrameRef.current !== null) {
-        cancelAnimationFrame(progressFrameRef.current);
-        progressFrameRef.current = null;
-      }
-    };
-  }, [
-    progressDurationMs,
-    progressEndAt,
-    progressTimerId,
-    progressTimerIsRunning,
-    progressTimerLabel,
-    progressTimerPhase,
-    setProgressBorderProgress,
-    startCooling,
-  ]);
+    return () => { if (frame !== undefined) cancelAnimationFrame(frame); };
+  }, [coolingDurationMs, progressDurationMs, progressEndAt, progressTimerId, progressTimerPhase, setProgressBorderProgress, syncTimerState]);
 
   const formatTime = (time: number) => {
     const absTime = Math.abs(time);
@@ -438,76 +286,10 @@ const TeaTimer: React.FC = () => {
       .padStart(2, '0')}`;
   };
 
-  const handleStartTimer = () => {
-    const totalSeconds = durationSeconds;
-
-    if (totalSeconds <= 0) return;
-
-    setProgressBorderProgress(1, BREWING_PROGRESS_COLOR);
-
-    const startedAt = Date.now();
-    const newTimer: TimerInstance = {
-      id: globalThis.crypto?.randomUUID?.() ?? `${startedAt}-${Math.random().toString(36).slice(2)}`,
-      initialTime: totalSeconds,
-      endAt: startedAt + totalSeconds * 1000,
-      timeLeft: totalSeconds,
-      isRunning: true,
-      timerPhase: 'brewing',
-      label: formatTime(durationSeconds),
-    };
-
-    recordDiary?.({ type: 'start', timerId: newTimer.id, duration: totalSeconds, at: startedAt });
-
-    coolingStartedRef.current.delete(newTimer.id);
-    setActiveTimers((prevTimers) => [
-      ...prevTimers.filter((timer) => timer.timerPhase !== 'cooling'),
-      newTimer,
-    ]);
-    setCurrentDisplayTimerId(newTimer.id);
-  };
-
-  const handleResetTimer = (id: string) => {
-    setActiveTimers((prevTimers) => {
-      const remainingTimers = prevTimers.filter((timer) => timer.id !== id);
-
-      if (id === currentDisplayTimerId) {
-        setCurrentDisplayTimerId(remainingTimers.length > 0 ? remainingTimers[0].id : null);
-      }
-
-      return remainingTimers;
-    });
-  };
-
-  const handleStopTimer = (timer: TimerInstance) => {
-    recordDiary?.({ type: 'stop', timerId: timer.id });
-    coolingStartedRef.current.add(timer.id);
-    if (progressFrameRef.current !== null) {
-      cancelAnimationFrame(progressFrameRef.current);
-      progressFrameRef.current = null;
-    }
-    setProgressBorderProgress(0, BREWING_PROGRESS_COLOR);
-    handleResetTimer(timer.id);
-  };
-
   const handleConfirmSessionReset = () => {
     if (resetInProgressRef.current) return;
-
     resetInProgressRef.current = true;
-    recordDiary?.({ type: 'reset' });
-
-    if (progressFrameRef.current !== null) {
-      cancelAnimationFrame(progressFrameRef.current);
-      progressFrameRef.current = null;
-    }
-
-    coolingStartedRef.current.clear();
-    completedTimerIdsRef.current.clear();
-    setActiveTimers([]);
-    resetPourCount();
-    setDurationSeconds(10);
-    setCurrentDisplayTimerId(null);
-    setIsTeaCoolingTooLong(false);
-    setProgressBorderProgress(0, BREWING_PROGRESS_COLOR);
+    resetSession();
     setIsResetPopupOpen(false);
   };
 
@@ -525,15 +307,15 @@ const TeaTimer: React.FC = () => {
         <div className="functional-block timer-actions grid w-full grid-cols-3 gap-3">
           <button
             type="button"
-            onClick={() => currentDisplayTimer && handleStopTimer(currentDisplayTimer)}
+            onClick={() => timer && stopTimer(timer.id)}
             className="control-button control-button-secondary"
-            disabled={!currentDisplayTimer}
+            disabled={!timer}
           >
             {t('stop')}
           </button>
           <button
             type="button"
-            onClick={handleStartTimer}
+            onClick={startTimer}
             className="control-button control-button-primary col-span-2"
             disabled={isBrewingActive || durationSeconds === 0}
           >
@@ -541,36 +323,33 @@ const TeaTimer: React.FC = () => {
           </button>
         </div>
 
-        <div
-          className="functional-block active-timer-section"
-          style={{ '--cooling-progress-color': COOLING_PROGRESS_COLOR } as React.CSSProperties}
-        >
+        <div className="functional-block active-timer-section">
           <span
             className="time-carousel-label active-timer-label"
-            data-phase={hasActiveCountdown ? currentDisplayTimer?.timerPhase : 'idle'}
+            data-phase={timer?.phase ?? 'idle'}
             aria-live="polite"
           >
-            {hasActiveCountdown && currentDisplayTimer
-              ? t(currentDisplayTimer.timerPhase === 'cooling' ? 'teaCoolingLabel' : 'teaBrewing')
+            {timer
+              ? t(timer.phase === 'cooling' ? 'teaCoolingLabel' : 'teaBrewing')
               : t('noActiveTimers')}
           </span>
           <div
             className="active-timer"
-            data-phase={hasActiveCountdown ? currentDisplayTimer?.timerPhase : 'idle'}
+            data-phase={timer?.phase ?? 'idle'}
           >
             <canvas ref={progressCanvasRef} className="active-timer-progress" aria-hidden="true" />
             <output
               className="active-timer-digits"
               aria-label={
-                hasActiveCountdown && currentDisplayTimer
-                  ? currentDisplayTimer.timerPhase === 'cooling'
-                    ? `${formatTime(currentDisplayTimer.timeLeft)} ${t('overtime')}`
-                    : `${formatTime(currentDisplayTimer.timeLeft)} ${t('remaining')}`
+                timer
+                  ? timer.phase === 'cooling'
+                    ? `${formatTime(timeLeft)} ${t('overtime')}`
+                    : `${formatTime(timeLeft)} ${t('remaining')}`
                   : t('noActiveTimers')
               }
             >
-              {hasActiveCountdown && currentDisplayTimer
-                ? formatTime(currentDisplayTimer.timeLeft)
+              {timer
+                ? formatTime(timeLeft)
                 : null}
             </output>
           </div>

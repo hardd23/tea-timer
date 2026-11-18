@@ -7,6 +7,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(TeaUpdateInstaller.class);
+        registerPlugin(TeaSessionStorage.class);
         super.onCreate(savedInstanceState);
     }
 }

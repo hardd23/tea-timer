@@ -13,7 +13,7 @@ describe('tea diary model', () => {
       { id: 's2', at: 2000, type: 'start', timerId: 'b', duration: 60, owner: 'tab-b' },
       { id: 'recovery', at: 3000, type: 'recover', owner: 'tab-a', before: 3000 },
     ]);
-    expect(state.sessions[0].actions.filter((action) => action.type === 'interrupted').map((action) => action.timerId)).toEqual(['a']);
+    expect(state.sessions[0].actions.flatMap((action) => action.type === 'interrupted' ? [action.timerId] : [])).toEqual(['a']);
     const completed = applyDiaryEvent(state, { id: 'done', at: 61000, type: 'complete', timerId: 'a' });
     expect(completed.sessions[0].actions.some((action) => action.type === 'interrupted')).toBe(false);
     expect(completed.sessions[0].count).toBe(1);
@@ -62,6 +62,23 @@ describe('tea diary model', () => {
     expect(state.sessions[0].actions.map((action) => action.type)).toEqual(['start', 'complete']);
     expect(state.sessions[0].count).toBe(1);
     expect(diaryDuration(state.sessions[0])).toBe(490000);
+  });
+
+  it('restores a migrated session when an idle check wins the race against the saved timer', () => {
+    const late = 40 * 60_000;
+    const legacy = sequence([
+      { id: 'old-session', at: 1000, type: 'start', timerId: 'old-brew', duration: 10 },
+      { id: 'old-done', at: 11000, type: 'complete', timerId: 'old-brew' },
+      { id: 'idle', at: late, type: 'check' },
+    ]);
+    expect(legacy.activeId).toBeNull();
+    const start: DiaryEvent = { id: 'saved-start', at: 12000, type: 'start', timerId: 'saved-brew', duration: 10, sessionId: 'old-session', owner: 'tab' };
+    const recover: DiaryEvent = { id: 'recover', at: late, type: 'recover', owner: 'tab', before: late };
+    const complete: DiaryEvent = { id: 'saved-done', at: 22000, type: 'complete', timerId: 'saved-brew', sessionId: 'old-session' };
+    const restored = [start, recover, complete, complete].reduce(applyDiaryEvent, legacy);
+    expect(restored.activeId).toBe('old-session');
+    expect(restored.sessions[0]).toMatchObject({ count: 2, endedAt: null, persistent: true });
+    expect(restored.sessions[0].actions.map((action) => action.type)).toEqual(['start', 'complete', 'start', 'complete']);
   });
 
   it('does not invent a duration without a completed brew', () => {

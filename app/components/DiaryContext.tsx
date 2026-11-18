@@ -2,7 +2,8 @@
 
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { emptyDiary, type DiaryEvent, type DiaryState } from '../lib/tea-diary';
-import { readDiary, writeDiaryEvent } from '../lib/tea-diary-storage';
+import { readDiary, writeDiaryEvent, writeDiaryEvents } from '../lib/tea-diary-storage';
+import type { SessionDiaryEvent } from '../lib/tea-session';
 import { useLanguage } from './LanguageContext';
 
 type NewEvent = DiaryEvent extends infer E ? E extends DiaryEvent ? Omit<E, 'id' | 'at'> & { at?: number } : never : never;
@@ -11,6 +12,7 @@ interface DiaryContextValue {
   ready: boolean;
   error: boolean;
   record: (event: NewEvent) => void;
+  syncSessionEvents: (events: readonly SessionDiaryEvent[]) => Promise<void>;
   retry: () => void;
   saveNote: (sessionId: string, note: string, expected: string) => Promise<boolean>;
 }
@@ -60,6 +62,22 @@ export function DiaryProvider({ children }: { children: ReactNode }) {
     queue.current.push({ event: { ...event, ...(event.type === 'start' ? { owner: owner.current } : {}), id: eventId(), at: event.at ?? Date.now() } as DiaryEvent });
     void flush();
   }, [flush]);
+
+  const syncSessionEvents = useCallback(async (events: readonly SessionDiaryEvent[]) => {
+    try {
+      const result = await writeDiaryEvents(events);
+      if (mounted.current && queue.current.length === 0) {
+        setState(result);
+        setReady(true);
+        setError(false);
+      }
+      channel.current?.postMessage('changed');
+      try { window.localStorage.setItem('tea-timer-diary-pulse', eventId()); } catch { /* BroadcastChannel remains available where supported. */ }
+    } catch (error) {
+      if (mounted.current) setError(true);
+      throw error;
+    }
+  }, []);
 
   useEffect(() => {
     mounted.current = true;
@@ -112,7 +130,7 @@ export function DiaryProvider({ children }: { children: ReactNode }) {
     queue.current.push({ event: { id: eventId(), at: Date.now(), type: 'note', sessionId, note, expected }, complete });
     void flush();
   }), [flush]);
-  const value = useMemo(() => ({ state, ready, error, record, retry: () => void flush(), saveNote }), [state, ready, error, record, flush, saveNote]);
+  const value = useMemo(() => ({ state, ready, error, record, syncSessionEvents, retry: () => void flush(), saveNote }), [state, ready, error, record, syncSessionEvents, flush, saveNote]);
   return <DiaryContext.Provider value={value}>{children}</DiaryContext.Provider>;
 }
 

@@ -4,4 +4,7 @@
     <string name="title_activity_main">Tea Timer</string>
     <string name="package_name">lab.hardd.teatimer</string>
     <string name="custom_url_scheme">lab.hardd.teatimer</string>
+    <string name="tea_timer_alerts">Tea timer alerts</string>
+    <string name="tea_timer_brew_done">Brewing is complete</string>
+    <string name="tea_timer_cooling_done">Cooling interval reached</string>
 </resources>
