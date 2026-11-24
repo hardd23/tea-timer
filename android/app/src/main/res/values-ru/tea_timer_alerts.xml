@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="tea_timer_alerts">Сигналы чайного таймера</string>
-    <string name="tea_timer_brew_done">Заваривание завершено</string>
-    <string name="tea_timer_cooling_done">Время остывания истекло</string>
+    <string name="tea_timer_sound_channel">Tea Timer: %1$s</string>
+    <string name="tea_timer_sound_silent">Без звука</string>
+    <string name="tea_timer_sound_default">Короткая чаша</string>
+    <string name="tea_timer_sound_gong_clear">Короткий гонг</string>
+    <string name="tea_timer_sound_gong_soft">Длинный гонг</string>
+    <string name="tea_timer_sound_singing_bowl">Низкая чаша</string>
+    <string name="tea_timer_brew_done">Пролив № %1$d завершён</string>
+    <string name="tea_timer_cooling_done">Пролив № %1$d — остывание завершено</string>
+    <string name="tea_timer_brewing_time">Время заваривания: %1$s</string>
+    <string name="tea_timer_minutes">%1$d мин</string>
+    <string name="tea_timer_seconds">%1$d сек</string>
+    <string name="tea_timer_minutes_seconds">%1$d мин %2$d сек</string>
 </resources>

@@ -1,4 +1,5 @@
 import { Capacitor, registerPlugin } from '@capacitor/core';
+import { getTimerSound, playTimerSound, unlockTimerAudio, type TimerSoundId, type TimerSounds } from './timer-sounds';
 
 export const TEA_SESSION_KEY = 'tea-timer-session';
 const MAX_DURATION = 3595;
@@ -6,6 +7,7 @@ const MAX_DURATION = 3595;
 export type CoolingDurationMinutes = 1 | 2 | 3 | 4 | 5;
 export const DEFAULT_COOLING_MINUTES: CoolingDurationMinutes = 3;
 export const MINUTE_MS = 60_000;
+export const SESSION_TIMEOUT_MS = 120 * MINUTE_MS;
 
 const validCoolingMinutes = (value: unknown): value is CoolingDurationMinutes =>
   value === 1 || value === 2 || value === 3 || value === 4 || value === 5;
@@ -17,7 +19,7 @@ export type SavedTimer = {
   endAt: number;
 } & (
   | { phase: 'brewing' }
-  | { phase: 'cooling'; coolingDurationMs: number; coolingAlertEnabled: boolean; coolingAlertHandled: boolean }
+  | { phase: 'cooling'; coolingDurationMs: number; coolingAlertEnabled: boolean; coolingAlertHandled: boolean; pourNumber?: number }
 );
 
 export type SessionDiaryEvent = { id: string; at: number; sessionId: string } & (
@@ -35,6 +37,8 @@ export interface SavedTeaSession {
   coolingDurationMinutes: CoolingDurationMinutes;
   timer: SavedTimer | null;
   pourCount: number;
+  lastPourCompletedAt?: number;
+  sounds?: TimerSounds;
   pendingDiary: SessionDiaryEvent[];
 }
 
@@ -88,7 +92,13 @@ export function parseTeaSession(raw: string | null): SavedTeaSession | null {
     }
     return {
       ...saved,
+      lastPourCompletedAt: saved.sessionId && validTime(saved.lastPourCompletedAt ?? -1)
+        ? saved.lastPourCompletedAt : undefined,
       coolingEnabled,
+      sounds: saved.sounds ? {
+        brewing: getTimerSound(saved.sounds.brewing).id,
+        cooling: getTimerSound(saved.sounds.cooling).id,
+      } : undefined,
       coolingDurationMinutes: validCoolingMinutes(saved.coolingDurationMinutes) ? saved.coolingDurationMinutes : DEFAULT_COOLING_MINUTES,
       timer: restoredTimer,
     };
@@ -101,25 +111,37 @@ const plugin = registerPlugin<{
   read(): Promise<{ value: string | null }>;
   write(options: { value: string }): Promise<void>;
   requestAlerts(): Promise<void>;
-  signal(options: { timerId: string; phase: SavedTimer['phase']; allowWebAudio: boolean }): Promise<{ playInWeb: boolean }>;
+  setAlertLanguage(options: { language: 'en' | 'ru' }): Promise<void>;
+  signal(options: { timerId: string; phase: SavedTimer['phase'] }): Promise<void>;
+  preview(options: { token: string; soundId: TimerSoundId }): Promise<void>;
+  stopPreview(options: { token: string }): Promise<void>;
 }>('TeaSessionStorage');
 
 export const usesNativeTeaSession = () => Capacitor.getPlatform() === 'android';
 export const readNativeTeaSession = async () => parseTeaSession((await plugin.read()).value);
 export const writeNativeTeaSession = (snapshot: SavedTeaSession) => plugin.write({ value: JSON.stringify(snapshot) });
 export const requestNativeTimerAlerts = () => plugin.requestAlerts();
+export const setNativeAlertLanguage = (language: 'en' | 'ru') => plugin.setAlertLanguage({ language });
 
-export function playTimerSignal(timerId: string, phase: SavedTimer['phase'], native: boolean) {
-  const playAudio = () => {
-    try { void new Audio('/notification.mp3').play().catch(() => undefined); }
-    catch { /* A missing sound must not prevent timer updates. */ }
+export function playTimerSignal(timerId: string, phase: SavedTimer['phase'], native: boolean, soundId: TimerSoundId) {
+  if (native) void plugin.signal({ timerId, phase }).catch(() => {});
+  else playTimerSound(soundId, true);
+}
+
+export function previewTimerSound(soundId: TimerSoundId, onFinished: () => void) {
+  if (!usesNativeTeaSession()) {
+    unlockTimerAudio();
+    return playTimerSound(soundId, false, onFinished);
+  }
+
+  const token = sessionId();
+  let stopped = false;
+  const finish = () => { if (!stopped) onFinished(); };
+  void plugin.preview({ token, soundId }).then(finish, finish);
+  return () => {
+    stopped = true;
+    void plugin.stopPreview({ token }).catch(() => {});
   };
-
-  if (native) {
-    void plugin.signal({ timerId, phase, allowWebAudio: document.visibilityState === 'visible' }).then(({ playInWeb }) => {
-      if (playInWeb && document.visibilityState === 'visible') playAudio();
-    }).catch(() => {});
-  } else playAudio();
 }
 
 export function readWebTeaSession() {

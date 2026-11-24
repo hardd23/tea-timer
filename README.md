@@ -10,20 +10,20 @@
   &nbsp;·&nbsp;
   <a href="https://my-tea-timer.vercel.app/"><strong>Open Timer</strong></a>
   &nbsp;·&nbsp;
-  <a href="https://github.com/hardd23/tea-timer/releases/latest"><strong>Download for Android</strong></a>
+  <a href="https://github.com/hardd23/tea-timer/releases/download/v1.3.2/Tea-Timer-1.3.2.apk"><strong>Download Tea Timer 1.3.2 for Android</strong></a>
 </p>
 
 <p align="center">
   <a href="https://hardd23.github.io/tea-timer/"><img src="https://img.shields.io/badge/Website-GitHub_Pages-327452?style=flat-square" alt="App website on GitHub Pages"></a>
   <a href="https://my-tea-timer.vercel.app/"><img src="https://img.shields.io/badge/Web--version-Open-2e7d32?style=flat-square" alt="Open the web version"></a>
-  <a href="https://github.com/hardd23/tea-timer/releases/latest"><img src="https://img.shields.io/badge/Android-APK-3ddc84?style=flat-square&amp;logo=android&amp;logoColor=white" alt="Download the Android APK"></a>
-  <a href="#whats-new-in-131"><img src="https://img.shields.io/badge/Version-1.3.1-397b59?style=flat-square" alt="Version 1.3.1"></a>
+  <a href="https://github.com/hardd23/tea-timer/releases/download/v1.3.2/Tea-Timer-1.3.2.apk"><img src="https://img.shields.io/badge/Android-APK-3ddc84?style=flat-square&amp;logo=android&amp;logoColor=white" alt="Download the Android APK"></a>
+  <a href="#whats-new-in-132"><img src="https://img.shields.io/badge/Version-1.3.2-397b59?style=flat-square" alt="Version 1.3.2"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-5f6b61?style=flat-square" alt="MIT License"></a>
 </p>
 
 ## Tea Timer Interface
 
-The screenshots show Tea Timer 1.3.0 in dark mode.
+The screenshots show Tea Timer 1.3.2 in dark mode.
 
 <p align="center">
   <img src="./assets/readme/screenshots/tea-timer-idle.png" width="218" alt="Tea Timer — selecting minutes and seconds before starting">
@@ -43,7 +43,7 @@ The screenshots show Tea Timer 1.3.0 in dark mode.
   <p align="center">
     <img src="./assets/readme/screenshots/tea-timer-wisdom.png" width="218" alt="Tea Timer — tea saying">
     &nbsp;
-    <img src="./assets/readme/screenshots/tea-timer-settings.png" width="218" alt="Tea Timer — theme, language, cooling alert, and infusion settings">
+    <img src="./assets/readme/screenshots/tea-timer-settings.png" width="218" alt="Tea Timer — independent brewing and cooling sound settings">
   </p>
 </details>
 
@@ -52,32 +52,29 @@ The screenshots show Tea Timer 1.3.0 in dark mode.
 | | Feature |
 | --- | --- |
 | ⏳ | Minute and second wheels with gesture, mouse wheel, and keyboard controls; choose 5- or 10-second steps. |
-| 🍵 | Brewing countdown followed by a cooling timer, with a brewing signal and an optional second alert after 1–5 minutes. |
-| 🔢 | Infusion counter with automatic tracking and manual adjustment in settings — up to 99. |
+| 🍵 | Brewing countdown followed by a cooling timer with softly pulsing digits and an optional alert after 1–5 minutes. |
+| 🔔 | Independently preview, select, or mute the sounds for brewing and cooling. Android background notifications include the infusion number and brewing time. |
+| 🔢 | Saved tea sessions with an infusion counter up to 99 and a prompt after a two-hour break when the timer is stopped. |
 | 🌗 | Light and dark modes with three independently selectable accent palettes, remembered on the device. |
 | RU / EN | Russian and English interfaces without reloading the page. |
 | 💬 | 315 tea sayings in random order, with a 10-second reading pause. |
 | ↻ | Android update checks and verified APK downloads through GitHub Releases. |
 
-## What's New in 1.3.1
+## What's New in 1.3.2
 
-- Android can check the public release page when the GitHub API is unavailable. If it finds a newer version, the menu shows the update indicators and links to the release.
+- Android shows one notification at a time when the app is in the background or the screen is locked. Returning to Tea Timer clears it.
+- After a two-hour break, Tea Timer offers to continue the saved session or start a new one while keeping your selected brew duration and preferences.
+- Brewing and cooling have distinct digit colors. Slightly smaller digits and a separate minus sign keep the reading centered. The negative countdown respects reduced motion.
+- Four bowl and gong recordings can be previewed and selected separately for brewing and cooling. Either signal can be muted. Sounds are prepared in advance, and each timer alert replaces any audio already playing.
 
-## What's New in 1.3.0
-
-- Set the cooling alert to sound after 1–5 minutes or turn it off while the cooling timer keeps running.
-- Larger wheel digits, minute and second marks inside the frames, and matching regular-weight digits during brewing and cooling.
-- Neutral timer digits in every theme, a header mark that matches the Start button, and a simpler adaptive Android icon.
-- The timer phase and infusion count are saved as part of the tea session.
-
-The download link above points to the latest published release.
+See the [bilingual changelog](./CHANGELOG.md) for the full release notes.
 
 ## How It Works
 
 1. Select minutes and seconds on the vertical wheels and press “Start.”
 2. During brewing, the timer border shows the countdown progress.
-3. When brewing ends, the first signal sounds, the timer displays cooling time with a minus sign, and the counter adds an infusion.
-4. Use Settings to choose the cooling duration or turn the second signal off.
+3. When brewing ends, the timer starts showing cooling time with a minus sign and the counter adds an infusion. A sound plays if enabled.
+4. In Settings, choose the cooling delay and pick or mute either sound independently.
 5. Select “Reset tea session” in Settings to start over.
 
 Tea Timer uses the saved session and actual brew end time to restore the timer phase and infusion count when you reopen the app. On Android, allow notifications and alarms for alerts while the screen is locked.
@@ -94,7 +91,7 @@ Open [my-tea-timer.vercel.app](https://my-tea-timer.vercel.app/) in a modern bro
 
 ### Android
 
-Download the latest `Tea-Timer-*.apk` file from the [Releases](https://github.com/hardd23/tea-timer/releases/latest) page, open it on your Android device, and confirm the installation. Install the APK over an existing copy signed with the same certificate to keep data saved by that version.
+Download [Tea-Timer-1.3.2.apk](https://github.com/hardd23/tea-timer/releases/download/v1.3.2/Tea-Timer-1.3.2.apk), open it on your Android device, and confirm the installation. Install the APK over an existing copy signed with the same certificate to keep data saved by that version. See [Releases](https://github.com/hardd23/tea-timer/releases) for other versions.
 
 > Android may ask you to allow app installation from this source — this is a standard system message for APK files downloaded outside Google Play.
 
@@ -120,4 +117,4 @@ In Settings, choose “Check for updates” to find the latest stable release an
 
 ## License
 
-The source code is distributed under the [MIT License](./LICENSE). Attribution for visual materials and tea sayings is provided in [NOTICE.md](./NOTICE.md).
+The source code is distributed under the [MIT License](./LICENSE). See [NOTICE.md](./NOTICE.md) for visual materials and tea sayings, and [SOUND-CREDITS.md](./SOUND-CREDITS.md) for audio sources and licenses.

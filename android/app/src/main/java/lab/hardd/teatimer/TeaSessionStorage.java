@@ -18,6 +18,7 @@ import org.json.JSONObject;
 public class TeaSessionStorage extends Plugin {
     @PluginMethod
     public void read(PluginCall call) {
+        TeaTimerAudio.prepare(getContext());
         String value = TeaTimerAlerts.restore(getContext());
         JSObject result = new JSObject();
         result.put("value", value == null ? JSONObject.NULL : value);
@@ -54,11 +55,31 @@ public class TeaSessionStorage extends Plugin {
     }
 
     @PluginMethod
+    public void setAlertLanguage(PluginCall call) {
+        TeaTimerAlerts.setLanguage(getContext(), call.getString("language"));
+        call.resolve();
+    }
+
+    @PluginMethod
     public void signal(PluginCall call) {
-        boolean playInWeb = TeaTimerAlerts.deliver(getContext(), call.getString("timerId"),
-            call.getString("phase"), -1, Boolean.TRUE.equals(call.getBoolean("allowWebAudio")));
-        JSObject result = new JSObject();
-        result.put("playInWeb", playInWeb);
-        call.resolve(result);
+        TeaTimerAlerts.deliver(getContext(), call.getString("timerId"), call.getString("phase"), -1);
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void preview(PluginCall call) {
+        String token = call.getString("token");
+        if (token == null) {
+            call.reject("Preview token is missing");
+            return;
+        }
+        TeaTimerAlerts.preview(getContext(), TimerSound.fromId(call.getString("soundId")), token, call::resolve);
+    }
+
+    @PluginMethod
+    public void stopPreview(PluginCall call) {
+        String token = call.getString("token");
+        if (token != null) TeaTimerAudio.stopPreview(token);
+        call.resolve();
     }
 }

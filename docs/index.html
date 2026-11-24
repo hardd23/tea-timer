@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111511">
-  <meta name="description" content="Бесплатный чайный таймер для Android и браузера. Отсчёт заваривания, настраиваемый сигнал остывания и счётчик проливов.">
+  <meta name="description" content="Чайный таймер для Android и браузера с отдельными звуками заваривания и остывания, фоновыми уведомлениями и сохранением чаепития.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Tea Timer: искусство не спешить">
-  <meta property="og:description" content="Tea Timer для Android и браузера. Заваривайте чай по таймеру, настройте сигнал остывания и следите за числом проливов.">
+  <meta property="og:description" content="Выбирайте звуки заваривания и остывания, считайте проливы и продолжайте сохранённое чаепитие в Tea Timer.">
   <title>Tea Timer: искусство не спешить</title>
   <link rel="stylesheet" href="./landing.css?v=20261029-1">
-  <script src="./landing.js?v=1.3.0" defer></script>
+  <script src="./landing.js?v=1.3.2" defer></script>
 </head>
 <body>
   <a class="skip" href="#content">Перейти к содержанию</a>
@@ -27,7 +27,7 @@
             <span aria-hidden="true">/</span>
             <button type="button" data-language="en" aria-label="Английский" aria-pressed="false">EN</button>
           </div>
-          <a class="nav-cta" href="https://github.com/hardd23/tea-timer/releases/latest">Скачать APK</a>
+          <a class="nav-cta" href="https://github.com/hardd23/tea-timer/releases/download/v1.3.2/Tea-Timer-1.3.2.apk">Скачать APK</a>
         </div>
       </nav>
     </header>
@@ -37,14 +37,14 @@
           <h1 class="serif" id="hero-title">Искусство<br>не спешить.</h1>
           <p class="hero-desc">Заваривайте чай в своём ритме. Tea Timer бережно отсчитывает секунды, следит за остыванием и помнит каждый пролив, чтобы вы могли наслаждаться моментом.</p>
           <div class="actions">
-            <a class="button" href="https://github.com/hardd23/tea-timer/releases/latest">
+            <a class="button" href="https://github.com/hardd23/tea-timer/releases/download/v1.3.2/Tea-Timer-1.3.2.apk">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v3h16v-3" stroke-linecap="round" stroke-linejoin="round"/></svg>
               Скачать для Android
             </a>
             <a class="text-link" href="https://my-tea-timer.vercel.app/" target="_blank" rel="noopener noreferrer">Открыть веб-версию</a>
           </div>
           <p class="hero-footnote"><span>Бесплатно</span><span>APK для Android</span><span>Открытый исходный код</span></p>
-          <p class="hero-desc">Кнопка загрузки ведёт к последнему опубликованному релизу.</p>
+          <p class="hero-desc">Версия 1.3.2 для Android.</p>
         </div>
         <div class="visual" aria-label="Экран выбора времени Tea Timer">
           <div class="phone-screenshot">
@@ -52,7 +52,7 @@
           </div>
           <div class="float-note note-top" aria-hidden="true"><span class="dot"></span><span><strong>Точное время</strong>Минуты и секунды</span></div>
           <div class="float-note note-bottom" aria-hidden="true"><span class="kanji">茶</span><span><strong>Чайный ритуал</strong>Без суеты и спешки</span></div>
-          <span class="hero-caption">Экран Tea Timer 1.3.0</span>
+          <span class="hero-caption">Экран Tea Timer 1.3.2</span>
         </div>
       </section>
     </main>
@@ -75,7 +75,7 @@
         <div>
           <span class="panel-number">01 / Ритм</span>
           <h3>От первого мгновения до последней капли.</h3>
-          <p>Первый сигнал прозвучит в конце заваривания. Затем таймер покажет, сколько чай остывает. В настройках можно включить второй сигнал через 1–5 минут.</p>
+          <p>После заваривания цифры меняют цвет и плавно мерцают, показывая время остывания. Для каждого события можно выбрать звук или отключить его. Сигнал остывания настраивается на 1–5 минут.</p>
         </div>
         <div class="phase" aria-label="Схема двух фаз таймера: заваривание, затем остывание">
           <div class="phase-row"><span>Заваривание</span><strong>03:00</strong></div>
@@ -87,7 +87,7 @@
       <article class="panel panel-small counter-panel">
         <span class="panel-number">02 / Проливы</span>
         <h3>Ничего не теряется.</h3>
-        <p>Автоматический счётчик проливов с ручной корректировкой. На Android чаепитие восстанавливается после сворачивания приложения.</p>
+        <p>Счётчик проливов сохраняется между запусками. После двухчасового перерыва при остановленном таймере Tea Timer предложит продолжить чаепитие или начать новое.</p>
         <span class="counter-stamp" aria-hidden="true">03</span>
       </article>
       <article class="panel panel-small quote-panel">
@@ -106,7 +106,7 @@
           <h2 id="preview-title">Один ритуал.<br>Каждое мгновение.</h2>
         </div>
       </div>
-      <p>Экраны Tea Timer 1.3.0 в тёмном режиме.</p>
+      <p>Экраны Tea Timer 1.3.2 в тёмном режиме.</p>
       <div class="screens-grid">
         <figure class="screen-card">
           <div class="screen-stage"><img src="./screenshots/tea-timer-brewing.png" width="395" height="857" loading="lazy" decoding="async" alt="Обратный отсчёт во время заваривания в Tea Timer"></div>
@@ -121,11 +121,11 @@
           <figcaption><span class="screen-index">03 / Пауза</span><strong>Немного мудрости.</strong><p>Чайные мысли для небольшого перерыва.</p></figcaption>
         </figure>
         <figure class="screen-card">
-          <div class="screen-stage"><img src="./screenshots/tea-timer-settings.png" width="395" height="857" loading="lazy" decoding="async" alt="Настройки темы, языка, сигнала остывания и числа проливов в Tea Timer"></div>
-          <figcaption><span class="screen-index">04 / Ваш выбор</span><strong>Только необходимое.</strong><p>Настройте сигнал и время остывания, тему, язык и счётчик проливов.</p></figcaption>
+          <div class="screen-stage"><img src="./screenshots/tea-timer-settings.png" width="395" height="857" loading="lazy" decoding="async" alt="Независимый выбор звуков заваривания и остывания в настройках Tea Timer"></div>
+          <figcaption><span class="screen-index">04 / Ваш выбор</span><strong>Только необходимое.</strong><p>Прослушайте чаши и гонги и выберите сигнал отдельно для заваривания и остывания.</p></figcaption>
         </figure>
       </div>
-      <div class="screens-action"><span>Понравилось? Попробуйте таймер в своём ритме.</span><a href="https://github.com/hardd23/tea-timer/releases/latest">Скачать APK</a></div>
+      <div class="screens-action"><span>Понравилось? Попробуйте таймер в своём ритме.</span><a href="https://github.com/hardd23/tea-timer/releases/download/v1.3.2/Tea-Timer-1.3.2.apk">Скачать APK</a></div>
     </div>
   </section>
 
@@ -133,7 +133,7 @@
     <div class="wrap details-layout">
       <div>
         <h2 id="details-title">Всё нужное.<br>И ничего лишнего.</h2>
-        <p class="details-text">Выберите время на барабанах. В настройках меняются цветовая тема, язык, шаг таймера и время до сигнала остывания.</p>
+        <p class="details-text">В фоне и при заблокированном экране Android уведомляет об окончании заваривания или остывания. В шторке остаётся только последнее уведомление с номером пролива и временем заваривания. Оно исчезает при возвращении в приложение.</p>
       </div>
       <div class="details-grid">
         <article class="mini"><span class="mini-icon" aria-hidden="true">◐</span><h3>Светлая и тёмная темы</h3><p>Три цветовые темы для каждого режима — чайный лист, янтарь и слива.</p></article>
@@ -150,14 +150,14 @@
       <p>Tea Timer бесплатно распространяется через GitHub Releases. Для установки не нужен аккаунт в магазине приложений.</p>
     </div>
     <ol class="steps">
-      <li><span class="step-num">01</span><h3>Скачайте файл</h3><p>Перейдите к последнему релизу и найдите в разделе Assets файл <strong>Tea-Timer-*.apk</strong>.</p></li>
+      <li><span class="step-num">01</span><h3>Скачайте файл</h3><p>Нажмите кнопку ниже, чтобы скачать <strong>Tea-Timer-1.3.2.apk</strong>.</p></li>
       <li><span class="step-num">02</span><h3>Разрешите установку</h3><p>Откройте APK. Android может попросить разрешить установку приложения из этого источника.</p></li>
       <li><span class="step-num">03</span><h3>Начните чаепитие</h3><p>Запустите таймер и выберите время. Проверка новых версий доступна из меню приложения.</p></li>
     </ol>
     <div class="download-actions">
-      <a class="button" href="https://github.com/hardd23/tea-timer/releases/latest">
+      <a class="button" href="https://github.com/hardd23/tea-timer/releases/download/v1.3.2/Tea-Timer-1.3.2.apk">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v3h16v-3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Перейти к APK
+        Скачать APK
       </a>
       <a class="text-link" href="https://my-tea-timer.vercel.app/" target="_blank" rel="noopener noreferrer">Или откройте таймер в браузере</a>
     </div>

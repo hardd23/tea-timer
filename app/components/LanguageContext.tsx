@@ -9,6 +9,7 @@ import {
   useMemo,
   useSyncExternalStore,
 } from 'react';
+import { setNativeAlertLanguage, usesNativeTeaSession } from '../lib/tea-session';
 
 export type Language = 'ru' | 'en';
 
@@ -92,6 +93,20 @@ const translations = {
     increasePourCount: 'Увеличить количество проливов',
     resetSession: 'Начать новое чаепитие',
     resetTitle: 'Начать новое чаепитие?',
+    continueTeaSession: 'Продолжить',
+    startNewTeaSession: 'Начать новое',
+    soundsSetting: 'Звуковые сигналы',
+    brewingSoundSetting: 'Окончание заваривания',
+    coolingSoundSetting: 'Окончание остывания',
+    selectSound: 'Выбор звука',
+    closeSoundPicker: 'Закрыть выбор звука',
+    soundSilent: 'Без звука',
+    soundDefault: 'Короткая чаша',
+    soundGongClear: 'Короткий гонг',
+    soundGongSoft: 'Длинный гонг',
+    soundSingingBowl: 'Низкая чаша',
+    previewSound: 'Прослушать',
+    stopSoundPreview: 'Остановить прослушивание',
     resetDescription: 'Счётчик проливов будет обнулён, а активный таймер остановлен.',
     cancel: 'Отмена',
     reset: 'Сбросить',
@@ -216,6 +231,20 @@ const translations = {
     increasePourCount: 'Increase brew count',
     resetSession: 'Start a new tea session',
     resetTitle: 'Start a new tea session?',
+    continueTeaSession: 'Continue',
+    startNewTeaSession: 'Start new',
+    soundsSetting: 'Sounds',
+    brewingSoundSetting: 'Brewing complete',
+    coolingSoundSetting: 'Cooling complete',
+    selectSound: 'Select sound',
+    closeSoundPicker: 'Close sound picker',
+    soundSilent: 'No sound',
+    soundDefault: 'Short Bowl',
+    soundGongClear: 'Short Gong',
+    soundGongSoft: 'Long Gong',
+    soundSingingBowl: 'Low Bowl',
+    previewSound: 'Preview',
+    stopSoundPreview: 'Stop preview',
     resetDescription: 'The brew counter will reset and the active timer will stop.',
     cancel: 'Cancel',
     reset: 'Reset',
@@ -311,6 +340,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = language;
+    if (usesNativeTeaSession()) void setNativeAlertLanguage(language).catch(() => {});
   }, [language]);
 
   const setLanguage = useCallback((nextLanguage: Language) => applyLanguage(nextLanguage), []);

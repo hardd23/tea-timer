@@ -26,7 +26,7 @@ beforeEach(() => {
   vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
   window.localStorage.setItem('tea-timer-language', 'en');
   play.mockReset().mockResolvedValue(undefined);
-  vi.stubGlobal('Audio', vi.fn(function () { return { play }; }));
+  vi.stubGlobal('Audio', vi.fn(function () { return { play, pause: vi.fn() }; }));
   vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1));
   vi.stubGlobal('cancelAnimationFrame', vi.fn());
   vi.stubGlobal('ResizeObserver', class {
@@ -352,6 +352,30 @@ it('brews for ten seconds, then starts cooling and records one pour', () => {
   expect(play).toHaveBeenCalledTimes(1);
 });
 
+it.each(['Stop', 'Reset', 'Start'])('clears the negative countdown on %s', (action) => {
+  render(<LanguageProvider><TeaSessionProvider><SessionResetButton /><TeaTimer /></TeaSessionProvider></LanguageProvider>);
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+  const digits = screen.getByLabelText('00:10 remaining');
+  expect(digits.hasAttribute('data-negative')).toBe(false);
+
+  act(() => { vi.advanceTimersByTime(10_000); });
+  expect(screen.getByLabelText('00:00 cooling')).toBe(digits);
+  expect(digits.hasAttribute('data-negative')).toBe(false);
+
+  act(() => { vi.advanceTimersByTime(1000); });
+  expect(screen.getByLabelText('-00:01 cooling')).toBe(digits);
+  expect(digits.hasAttribute('data-negative')).toBe(true);
+  act(() => { vi.advanceTimersByTime(1000); });
+  expect(screen.getByLabelText('-00:02 cooling')).toBe(digits);
+  expect(digits.hasAttribute('data-negative')).toBe(true);
+
+  if (action === 'Reset') {
+    fireEvent.click(screen.getByRole('button', { name: 'Start a new tea session' }));
+  }
+  fireEvent.click(screen.getByRole('button', { name: action }));
+  expect(digits.hasAttribute('data-negative')).toBe(false);
+});
+
 it('does not repeat completion after an interval followed by page events', () => {
   vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
   const { container } = render(
@@ -473,6 +497,96 @@ it('resets the tea session after a completed brew', () => {
 const renderSession = () => render(
   <LanguageProvider><TeaSessionProvider><SettingsMenu /><TeaTimer /></TeaSessionProvider></LanguageProvider>,
 );
+
+function saveIdleSession(lastPourCompletedAt?: number) {
+  sessionStorage.writeWebTeaSession({
+    ...sessionStorage.emptyTeaSession(),
+    sessionId: 'saved-tea-session',
+    pourCount: 3,
+    durationSeconds: 30,
+    coolingEnabled: false,
+    coolingDurationMinutes: 5,
+    lastPourCompletedAt,
+    sounds: { brewing: 'gong_clear', cooling: 'silent' },
+  });
+}
+
+function resumeSession() {
+  act(() => { window.dispatchEvent(new Event('pageshow')); });
+}
+
+function enableSessionDialog() {
+  HTMLDialogElement.prototype.showModal = function () { this.open = true; };
+  vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+}
+
+it.each([10, 119, 120])('checks the timeout only on return after %i minutes', (minutes) => {
+  enableSessionDialog();
+  const completedAt = Date.now();
+  saveIdleSession(completedAt);
+  renderSession();
+  vi.setSystemTime(completedAt + minutes * sessionStorage.MINUTE_MS);
+  expect(screen.queryByRole('dialog')).toBeNull();
+  resumeSession();
+  expect(Boolean(screen.queryByRole('dialog', { name: 'Start a new tea session?' }))).toBe(minutes === 120);
+});
+
+it.each(['empty', 'without a timestamp', 'brewing', 'cooling'])('does not prompt when the session is %s', (state) => {
+  enableSessionDialog();
+  const now = Date.now();
+  if (state !== 'empty') saveIdleSession(state === 'without a timestamp' ? undefined : now - sessionStorage.SESSION_TIMEOUT_MS);
+  if (state === 'brewing' || state === 'cooling') {
+    const saved = sessionStorage.readWebTeaSession()!;
+    const startedAt = state === 'brewing' ? now : now - 10_000;
+    const timer = { id: 'active-brew', startedAt, endAt: startedAt + 10_000, duration: 10 };
+    sessionStorage.writeWebTeaSession({ ...saved, timer: state === 'brewing'
+      ? { ...timer, phase: 'brewing' }
+      : { ...timer, phase: 'cooling', coolingDurationMs: 180_000, coolingAlertEnabled: false, coolingAlertHandled: false } });
+  }
+  const view = renderSession();
+  resumeSession();
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(view.container.querySelector('.brew-counter-value')?.textContent).toBe(state === 'empty' ? '0' : '3');
+});
+
+it('continues yesterday’s session until a new launch and updates the timestamp on the next pour', () => {
+  enableSessionDialog();
+  const yesterday = Date.now() - 24 * 60 * sessionStorage.MINUTE_MS;
+  saveIdleSession(yesterday);
+  const view = renderSession();
+  expect(screen.getByRole('dialog', { name: 'Start a new tea session?' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+  resumeSession();
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(sessionStorage.readWebTeaSession()).toMatchObject({ pourCount: 3, lastPourCompletedAt: yesterday });
+
+  view.unmount();
+  renderSession();
+  expect(screen.getByRole('dialog')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+  const endAt = Date.now() + 30_000;
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+  act(() => { vi.advanceTimersByTime(30_000); });
+  expect(sessionStorage.readWebTeaSession()).toMatchObject({ pourCount: 4, lastPourCompletedAt: endAt, timer: { pourNumber: 4 } });
+});
+
+it('starts a new session and preserves the duration and settings', () => {
+  enableSessionDialog();
+  saveIdleSession(Date.now() - sessionStorage.SESSION_TIMEOUT_MS);
+  window.localStorage.setItem('tea-timer-seconds-step', '5');
+  const view = renderSession();
+  fireEvent.click(screen.getByRole('button', { name: 'Start new' }));
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(view.container.querySelector('.brew-counter-value')?.textContent).toBe('0');
+  expect(sessionStorage.readWebTeaSession()).toMatchObject({
+    sessionId: null, timer: null, pourCount: 0, durationSeconds: 30, coolingEnabled: false, coolingDurationMinutes: 5,
+    sounds: { brewing: 'gong_clear', cooling: 'silent' },
+  });
+  expect(sessionStorage.readWebTeaSession()?.lastPourCompletedAt).toBeUndefined();
+  expect(window.localStorage.getItem('tea-timer-seconds-step')).toBe('5');
+  fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+  expect(screen.getByLabelText('00:30 remaining')).toBeTruthy();
+});
 
 it('restores the selected duration, same timer and remaining time after a web reload', () => {
   const first = renderSession();

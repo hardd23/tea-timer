@@ -1,16 +1,20 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { APP_VERSION } from './app-info';
+
+const description = 'A tea brewing and cooling timer with customizable sounds and saved tea sessions.';
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://my-tea-timer.vercel.app"),
   title: "Tea Timer",
-  description: "A minimal mobile-first tea brewing timer with cooling tracking and tea wisdom.",
+  description,
+  other: { 'application-version': APP_VERSION },
   authors: [{ name: "HARDD lab", url: "https://hardd-lab.vercel.app/" }],
   creator: "HARDD lab",
   openGraph: {
     title: "Tea Timer",
-    description: "A minimal mobile-first tea brewing timer with cooling tracking and tea wisdom.",
+    description,
     url: "/",
     siteName: "Tea Timer",
     type: "website",

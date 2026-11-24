@@ -21,11 +21,9 @@ const translations = {
   "Минуты и секунды": "Minutes and seconds",
   "Чайный ритуал": "Tea ritual",
   "Без суеты и спешки": "Calm and unhurried",
-  "Экран Tea Timer 1.3.0": "Tea Timer 1.3.0",
-  "Кнопка загрузки ведёт к последнему опубликованному релизу.":
-    "The download button points to the latest published release.",
-  "Экраны Tea Timer 1.3.0 в тёмном режиме.":
-    "Tea Timer 1.3.0 in dark mode.",
+  "Экран Tea Timer 1.3.2": "Tea Timer 1.3.2",
+  "Версия 1.3.2 для Android.": "Version 1.3.2 for Android.",
+  "Экраны Tea Timer 1.3.2 в тёмном режиме.": "Tea Timer 1.3.2 in dark mode.",
   "Три цветовые темы для каждого режима — чайный лист, янтарь и слива.": "Choose tea leaf, amber, or plum in either mode.",
   "Шаг 5 или 10 секунд. При прокрутке через ноль меняется и минута.": "Choose 5- or 10-second steps. Scrolling past zero adjusts the minutes.",
   "Приложение проверит и загрузит обновление. Установку можно подтвердить в Android.":
@@ -38,8 +36,8 @@ const translations = {
     "A minimalist tool designed around one goal: preserving the feeling of the moment while the tea reveals its flavor.",
   "01 / Ритм": "01 / Rhythm",
   "От первого мгновения до последней капли.": "From the first moment to the last drop.",
-  "Первый сигнал прозвучит в конце заваривания. Затем таймер покажет, сколько чай остывает. В настройках можно включить второй сигнал через 1–5 минут.":
-    "The first sound marks the end of brewing. The timer then shows how long the tea has been cooling. You can set a second alert after 1–5 minutes.",
+  "После заваривания цифры меняют цвет и плавно мерцают, показывая время остывания. Для каждого события можно выбрать звук или отключить его. Сигнал остывания настраивается на 1–5 минут.":
+    "After brewing, the digits change color and pulse gently as they show cooling time. Pick a sound or mute either event. Set the cooling alert for 1–5 minutes.",
   "Заваривание": "Brewing",
   "Старт": "Start",
   "Готово: 00:00": "Ready: 00:00",
@@ -47,8 +45,8 @@ const translations = {
   "После нуля": "After zero",
   "02 / Проливы": "02 / Infusions",
   "Ничего не теряется.": "Nothing gets lost.",
-  "Автоматический счётчик проливов с ручной корректировкой. На Android чаепитие восстанавливается после сворачивания приложения.":
-    "An automatic infusion counter with manual adjustment. On Android, the tea session resumes when you return to the app.",
+  "Счётчик проливов сохраняется между запусками. После двухчасового перерыва при остановленном таймере Tea Timer предложит продолжить чаепитие или начать новое.":
+    "The infusion counter is saved between launches. After a two-hour break, Tea Timer offers to continue or start a new session if the timer is stopped.",
   "03 / Настроение": "03 / Mood",
   "Мудрость в паузах.": "Wisdom in the pauses.",
   "315 чайных высказываний, которые помогают на мгновение остановиться.":
@@ -70,16 +68,16 @@ const translations = {
   "Чайные мысли для небольшого перерыва.": "Tea thoughts for a short break.",
   "04 / Ваш выбор": "04 / Your choice",
   "Только необходимое.": "Only what you need.",
-  "Настройте сигнал и время остывания, тему, язык и счётчик проливов.":
-    "Set the cooling alert, cooling duration, theme, language, and infusion count.",
+  "Прослушайте чаши и гонги и выберите сигнал отдельно для заваривания и остывания.":
+    "Preview the bowls and gongs, then choose a sound independently for brewing and cooling.",
   "Понравилось? Попробуйте таймер в своём ритме.":
     "Like what you see? Try the timer at your own pace.",
   "Всё нужное.": "Everything you need.",
   "И ничего лишнего.": "Nothing you do not.",
   "Выберите время привычным движением, переключите тему под вечернее настроение или смените язык. Настройки останутся с вами.":
     "Set the time with a familiar gesture, switch the theme to suit the evening, or change the language. Your settings stay with you.",
-  "Выберите время на барабанах. В настройках меняются цветовая тема, язык, шаг таймера и время до сигнала остывания.":
-    "Set the time with the wheels. In Settings, choose a color theme, language, timer step, and when the cooling alert sounds.",
+  "В фоне и при заблокированном экране Android уведомляет об окончании заваривания или остывания. В шторке остаётся только последнее уведомление с номером пролива и временем заваривания. Оно исчезает при возвращении в приложение.":
+    "Android notifies you when brewing or cooling finishes in the background or on the lock screen. Only the latest notification stays in the shade, with the infusion number and brewing time. Returning to the app clears it.",
   "Светлая и тёмная темы": "Light and dark themes",
   "Под настроение и освещение.": "For any mood and lighting.",
   "Два языка": "Two languages",
@@ -92,15 +90,13 @@ const translations = {
   "Tea Timer бесплатно распространяется через GitHub Releases. Для установки не нужен аккаунт в магазине приложений.":
     "Tea Timer is distributed for free through GitHub Releases. You do not need an app store account to install it.",
   "Скачайте файл": "Download the file",
-  "Перейдите к последнему релизу и найдите в разделе Assets файл":
-    "Open the latest release and find the file in the Assets section:",
+  "Нажмите кнопку ниже, чтобы скачать": "Use the button below to download",
   "Разрешите установку": "Allow installation",
   "Откройте APK. Android может попросить разрешить установку приложения из этого источника.":
     "Open the APK. Android may ask you to allow app installation from this source.",
   "Начните чаепитие": "Start your tea session",
   "Запустите таймер и выберите время. Проверка новых версий доступна из меню приложения.":
     "Launch the timer and choose a duration. You can check for new versions from the app menu.",
-  "Перейти к APK": "Go to the APK",
   "Или откройте таймер в браузере": "Or open the timer in your browser",
   "Немного внимания ко времени, и обычное чаепитие становится маленьким ритуалом.":
     "A little attention to time turns an ordinary cup of tea into a small ritual.",
@@ -127,8 +123,8 @@ const attributeTranslations = {
     "Cooling time marked with a minus sign and infusion counter in Tea Timer",
   "Полноэкранное чайное высказывание в Tea Timer":
     "Full-screen tea saying in Tea Timer",
-  "Настройки темы, языка, сигнала остывания и числа проливов в Tea Timer":
-    "Theme, language, cooling alert, and infusion settings in Tea Timer",
+  "Независимый выбор звуков заваривания и остывания в настройках Tea Timer":
+    "Independent brewing and cooling sound choices in Tea Timer settings",
   "О проекте": "About the project",
 };
 
@@ -136,18 +132,18 @@ const pageMetadata = {
   ru: {
     title: "Tea Timer: искусство не спешить",
     description:
-      "Бесплатный чайный таймер для Android и браузера. Отсчёт заваривания, настраиваемый сигнал остывания и счётчик проливов.",
+      "Чайный таймер для Android и браузера с отдельными звуками заваривания и остывания, фоновыми уведомлениями и сохранением чаепития.",
     ogTitle: "Tea Timer: искусство не спешить",
     ogDescription:
-      "Tea Timer для Android и браузера. Заваривайте чай по таймеру, настройте сигнал остывания и следите за числом проливов.",
+      "Выбирайте звуки заваривания и остывания, считайте проливы и продолжайте сохранённое чаепитие в Tea Timer.",
   },
   en: {
     title: "Tea Timer: the art of taking your time",
     description:
-      "Free tea timer for Android and the web, with a brewing countdown, a customizable cooling alert, and an infusion counter.",
+      "A tea timer for Android and the web with independent brewing and cooling sounds, background notifications, and saved tea sessions.",
     ogTitle: "Tea Timer: the art of taking your time",
     ogDescription:
-      "Tea Timer for Android and the web. Time your brew, set a cooling alert, and keep track of infusions.",
+      "Choose brewing and cooling sounds, track infusions, and continue saved tea sessions with Tea Timer.",
   },
 };
 

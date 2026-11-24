@@ -40,7 +40,7 @@ beforeEach(() => {
   HTMLDialogElement.prototype.showModal = function () { this.open = true; };
   HTMLDialogElement.prototype.close = function () { this.open = false; this.dispatchEvent(new Event('close')); };
   play.mockReset().mockResolvedValue(undefined);
-  vi.stubGlobal('Audio', vi.fn(function () { return { play }; }));
+  vi.stubGlobal('Audio', vi.fn(function () { return { play, pause: vi.fn() }; }));
   vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1));
   vi.stubGlobal('cancelAnimationFrame', vi.fn());
   vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} });

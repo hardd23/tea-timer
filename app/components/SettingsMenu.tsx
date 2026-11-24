@@ -14,6 +14,8 @@ import {
   type InstallStatus,
 } from '../lib/app-update';
 import AppDialog from './AppDialog';
+import SoundPicker from './SoundPicker';
+import { getTimerSound, type TimerSounds } from '../lib/timer-sounds';
 import { useLanguage } from './LanguageContext';
 import { useTeaSession } from './TeaSessionContext';
 import { useColorTheme, useTheme } from './ThemeToggle';
@@ -30,13 +32,16 @@ export default function SettingsMenu() {
   const {
     adjustCoolingDuration, adjustPourCount, coolingDurationMinutes, coolingEnabled,
     pourCount, requestSessionReset, secondsStep, setCoolingEnabled, setSecondsStep,
+    sounds, setSound,
   } = useTeaSession();
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme } = useColorTheme();
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const soundTriggerRef = useRef<HTMLButtonElement>(null);
   const checkerRef = useRef(createUpdateChecker(checkForAppUpdate));
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [soundPhase, setSoundPhase] = useState<keyof TimerSounds | null>(null);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
   const [updateState, setUpdateState] = useState<UpdateCheckState>('idle');
   const [updateResult, setUpdateResult] = useState<AppUpdateResult | null>(null);
@@ -276,6 +281,28 @@ export default function SettingsMenu() {
             </div>
           )}
 
+          <section className="settings-menu-row" aria-labelledby="settings-sounds-title">
+            <h3 id="settings-sounds-title">{t('soundsSetting')}</h3>
+            {(['brewing', 'cooling'] as const).map((phase) => (
+              <div key={phase} className="settings-sound-row">
+                <span id={`settings-sound-${phase}`}>{t(phase === 'brewing' ? 'brewingSoundSetting' : 'coolingSoundSetting')}</span>
+                <button
+                  type="button"
+                  id={`settings-sound-value-${phase}`}
+                  aria-labelledby={`settings-sound-${phase} settings-sound-value-${phase}`}
+                  aria-haspopup="dialog"
+                  aria-controls="sound-picker-dialog"
+                  onClick={(event) => {
+                    soundTriggerRef.current = event.currentTarget;
+                    setSoundPhase(phase);
+                  }}
+                >
+                  {t(getTimerSound(sounds[phase]).label)}
+                </button>
+              </div>
+            ))}
+          </section>
+
           <div className="settings-menu-row settings-pour-row">
             <span>{t('pourCountSetting')}</span>
             <div className="settings-pour-control">
@@ -322,6 +349,14 @@ export default function SettingsMenu() {
           </button>
         </div>
       </AppDialog>
+
+      <SoundPicker
+        isOpen={isMenuOpen && soundPhase !== null}
+        selected={sounds[soundPhase ?? 'brewing']}
+        onSelect={(id) => { if (soundPhase) setSound(soundPhase, id); }}
+        onClose={() => setSoundPhase(null)}
+        returnFocusRef={soundTriggerRef}
+      />
 
       <AppDialog
         id="update-check-dialog"

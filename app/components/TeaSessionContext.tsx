@@ -1,5 +1,6 @@
 'use client';
 
+import { App } from '@capacitor/app';
 import {
   createContext,
   type Dispatch,
@@ -16,9 +17,12 @@ import { useDiary } from './DiaryContext';
 import {
   clampPourCount, DEFAULT_COOLING_MINUTES, emptyTeaSession, MINUTE_MS, playTimerSignal,
   readNativeTeaSession, readWebTeaSession, requestNativeTimerAlerts, sessionId,
-  TEA_SESSION_KEY, usesNativeTeaSession, writeNativeTeaSession, writeWebTeaSession,
+  SESSION_TIMEOUT_MS, TEA_SESSION_KEY, usesNativeTeaSession, writeNativeTeaSession, writeWebTeaSession,
   type CoolingDurationMinutes, type SavedTeaSession, type SavedTimer, type SessionDiaryEvent,
 } from '../lib/tea-session';
+import { prepareTimerSounds, stopTimerAudio, unlockTimerAudio, type TimerSoundId, type TimerSounds } from '../lib/timer-sounds';
+
+const defaultSounds: TimerSounds = { brewing: 'default', cooling: 'default' };
 
 type SecondsStep = 5 | 10;
 const STEP_KEY = 'tea-timer-seconds-step';
@@ -55,11 +59,15 @@ interface TeaSessionContextValue {
   pourCount: number;
   adjustPourCount: (amount: number) => void;
   timer: SavedTimer | null;
+  sounds: TimerSounds;
+  setSound: (phase: SavedTimer['phase'], sound: TimerSoundId) => void;
   startTimer: () => void;
   completePour: (timerId: string, playSound: boolean) => void;
   completeCoolingAlert: (timerId: string, playSound: boolean) => void;
   stopTimer: (timerId: string) => void;
-  resetSession: () => void;
+  resetSession: (preserveDuration?: boolean) => void;
+  isStaleSessionPromptOpen: boolean;
+  continueSession: () => void;
   registerSessionResetHandler: (handler: () => void) => () => void;
   requestSessionReset: () => void;
 }
@@ -83,6 +91,50 @@ export function TeaSessionProvider({ children }: { children: ReactNode }) {
   const [isTeaCoolingTooLong, setIsTeaCoolingTooLong] = useState(false);
   const secondsStep = useSyncExternalStore<SecondsStep>(subscribeStep, getStep, () => 10);
   const sessionResetHandlerRef = useRef<(() => void) | null>(null);
+  const [staleSession, setStaleSession] = useState<{ id: string; completedAt: number } | null>(null);
+  const continuedSession = useRef(false);
+  const restored = snapshot !== undefined;
+  const sounds = snapshot?.sounds ?? defaultSounds;
+
+  useEffect(() => {
+    if (!native) prepareTimerSounds('default', sounds.brewing, sounds.cooling);
+  }, [native, sounds.brewing, sounds.cooling]);
+
+  useEffect(() => {
+    if (!native) return stopTimerAudio;
+  }, [native]);
+
+  useEffect(() => {
+    if (!restored) return;
+
+    const checkSession = () => {
+      const saved = current.current;
+      if (continuedSession.current || !saved?.sessionId || saved.timer || saved.lastPourCompletedAt === undefined) return;
+      if (Date.now() - saved.lastPourCompletedAt >= SESSION_TIMEOUT_MS) {
+        setStaleSession({ id: saved.sessionId, completedAt: saved.lastPourCompletedAt });
+      }
+    };
+    const checkVisibleSession = () => {
+      if (document.visibilityState === 'visible') checkSession();
+    };
+    checkVisibleSession();
+    document.addEventListener('visibilitychange', checkVisibleSession);
+    window.addEventListener('pageshow', checkVisibleSession);
+    const listener = native ? App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) checkSession();
+    }) : undefined;
+
+    return () => {
+      document.removeEventListener('visibilitychange', checkVisibleSession);
+      window.removeEventListener('pageshow', checkVisibleSession);
+      void listener?.then((handle) => handle.remove()).catch(() => {});
+    };
+  }, [native, restored]);
+
+  const continueSession = useCallback(() => {
+    continuedSession.current = true;
+    setStaleSession(null);
+  }, []);
 
   useEffect(() => {
     if (!native) return;
@@ -172,6 +224,12 @@ export function TeaSessionProvider({ children }: { children: ReactNode }) {
     if (duration !== state.durationSeconds) save({ ...state, durationSeconds: duration });
   }, [getCurrent, save]);
 
+  const setSound = useCallback((phase: SavedTimer['phase'], sound: TimerSoundId) => {
+    const state = getCurrent();
+    const sounds = state.sounds ?? defaultSounds;
+    if (sounds[phase] !== sound) save({ ...state, sounds: { ...sounds, [phase]: sound } });
+  }, [getCurrent, save]);
+
   const setSecondsStep = useCallback((step: SecondsStep) => {
     fallbackStep = step;
     try { window.localStorage.setItem(STEP_KEY, String(step)); useFallbackStep = false; }
@@ -195,6 +253,7 @@ export function TeaSessionProvider({ children }: { children: ReactNode }) {
   const coolIfDue = useCallback((state: SavedTeaSession, at: number): SavedTeaSession => {
     const timer = state.timer;
     if (!state.sessionId || timer?.phase !== 'brewing' || at < timer.endAt) return state;
+    const pourNumber = clampPourCount(state.pourCount + 1);
     return addDiaryEvent({
       ...state,
       timer: {
@@ -203,16 +262,17 @@ export function TeaSessionProvider({ children }: { children: ReactNode }) {
         coolingDurationMs: state.coolingDurationMinutes * MINUTE_MS,
         coolingAlertEnabled: state.coolingEnabled,
         coolingAlertHandled: false,
+        pourNumber,
       },
-      pourCount: clampPourCount(state.pourCount + 1),
+      pourCount: pourNumber,
+      lastPourCompletedAt: timer.endAt,
     }, { type: 'complete', id: `complete:${timer.id}`, timerId: timer.id, sessionId: state.sessionId, at: timer.endAt });
   }, [addDiaryEvent]);
 
   const saveTimerEvent = useCallback((next: SavedTeaSession, timerId: string, phase: SavedTimer['phase'], sound: boolean) => {
     // Android claims the event against the current snapshot before replacing it.
-    if (!native) save(next);
-    if (sound) playTimerSignal(timerId, phase, native);
-    if (native) save(next);
+    if (sound) playTimerSignal(timerId, phase, native, (next.sounds ?? defaultSounds)[phase]);
+    save(next);
   }, [native, save]);
 
   const completePour = useCallback((timerId: string, playSound: boolean) => {
@@ -252,6 +312,7 @@ export function TeaSessionProvider({ children }: { children: ReactNode }) {
   const startTimer = useCallback(() => {
     const state = getCurrent();
     if (state.durationSeconds <= 0 || state.timer?.phase === 'brewing') return;
+    if (!native) unlockTimerAudio();
 
     const at = Date.now();
     const id = state.sessionId ?? sessionId();
@@ -292,13 +353,17 @@ export function TeaSessionProvider({ children }: { children: ReactNode }) {
     }));
   }, [addDiaryEvent, coolIfDue, getCurrent, save]);
 
-  const resetSession = useCallback(() => {
+  const resetSession = useCallback((preserveDuration = false) => {
+    const state = getCurrent();
+    if (preserveDuration && (!state.sessionId || state.timer)) return;
     const at = Date.now();
-    const latest = coolIfDue(getCurrent(), at);
+    const latest = coolIfDue(state, at);
     const clean = {
       ...emptyTeaSession(),
+      ...(preserveDuration ? { durationSeconds: latest.durationSeconds } : {}),
       coolingEnabled: latest.coolingEnabled,
       coolingDurationMinutes: latest.coolingDurationMinutes,
+      sounds: latest.sounds,
       pendingDiary: latest.pendingDiary,
     };
     save(latest.sessionId ? addDiaryEvent(clean, {
@@ -327,6 +392,10 @@ export function TeaSessionProvider({ children }: { children: ReactNode }) {
       coolingEnabled: snapshot?.coolingEnabled ?? true, setCoolingEnabled,
       coolingDurationMinutes: snapshot?.coolingDurationMinutes ?? DEFAULT_COOLING_MINUTES, adjustCoolingDuration,
       timer: snapshot?.timer ?? null, startTimer, completePour, completeCoolingAlert, stopTimer, resetSession,
+      sounds, setSound,
+      isStaleSessionPromptOpen: staleSession !== null && staleSession.id === snapshot?.sessionId && !snapshot.timer
+        && staleSession.completedAt === snapshot.lastPourCompletedAt,
+      continueSession,
       pourCount: snapshot?.pourCount ?? legacyCount, adjustPourCount,
       isTeaCoolingTooLong, setIsTeaCoolingTooLong,
       registerSessionResetHandler, requestSessionReset,

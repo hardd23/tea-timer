@@ -5,6 +5,16 @@
     <string name="package_name">lab.hardd.teatimer</string>
     <string name="custom_url_scheme">lab.hardd.teatimer</string>
     <string name="tea_timer_alerts">Tea timer alerts</string>
-    <string name="tea_timer_brew_done">Brewing is complete</string>
-    <string name="tea_timer_cooling_done">Cooling interval reached</string>
+    <string name="tea_timer_sound_channel">Tea Timer: %1$s</string>
+    <string name="tea_timer_sound_silent">No sound</string>
+    <string name="tea_timer_sound_default">Short Bowl</string>
+    <string name="tea_timer_sound_gong_clear">Short Gong</string>
+    <string name="tea_timer_sound_gong_soft">Long Gong</string>
+    <string name="tea_timer_sound_singing_bowl">Low Bowl</string>
+    <string name="tea_timer_brew_done">Pour #%1$d complete</string>
+    <string name="tea_timer_cooling_done">Pour #%1$d — cooling complete</string>
+    <string name="tea_timer_brewing_time">Brewing time: %1$s</string>
+    <string name="tea_timer_minutes">%1$d min</string>
+    <string name="tea_timer_seconds">%1$d sec</string>
+    <string name="tea_timer_minutes_seconds">%1$d min %2$d sec</string>
 </resources>

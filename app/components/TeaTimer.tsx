@@ -26,7 +26,9 @@ const TeaTimer: React.FC = () => {
   const {
     completePour,
     completeCoolingAlert,
+    continueSession,
     durationSeconds,
+    isStaleSessionPromptOpen,
     setDurationSeconds,
     pourCount,
     registerSessionResetHandler,
@@ -40,6 +42,7 @@ const TeaTimer: React.FC = () => {
   const [isResetPopupOpen, setIsResetPopupOpen] = useState(false);
   const progressCanvasRef = useRef<HTMLCanvasElement>(null);
   const resetPopupRef = useRef<HTMLDivElement>(null);
+  const staleSessionDialogRef = useRef<HTMLDialogElement>(null);
   const resetInProgressRef = useRef(false);
   const progressValueRef = useRef(0);
   const progressPhaseRef = useRef<TimerPhase>('brewing');
@@ -50,6 +53,9 @@ const TeaTimer: React.FC = () => {
   const progressEndAt = timer?.endAt;
   const progressDurationMs = (timer?.duration ?? 0) * 1000;
   const coolingDurationMs = timer?.phase === 'cooling' && timer.coolingAlertEnabled ? timer.coolingDurationMs : 0;
+  const alertDeadline = timer?.phase === 'brewing' ? timer.endAt
+    : timer?.phase === 'cooling' && coolingDurationMs > 0 && !timer.coolingAlertHandled
+      ? timer.endAt + coolingDurationMs : undefined;
   const timeLeft = timer
     ? timer.phase === 'cooling'
       ? -getCoolingElapsedSeconds(now - timer.endAt)
@@ -81,6 +87,11 @@ const TeaTimer: React.FC = () => {
   useEffect(() => {
     setIsTeaCoolingTooLong(isTeaCoolingTooLong);
   }, [isTeaCoolingTooLong, setIsTeaCoolingTooLong]);
+
+  useEffect(() => {
+    const dialog = staleSessionDialogRef.current;
+    if (isStaleSessionPromptOpen && dialog && !dialog.open) dialog.showModal();
+  }, [isStaleSessionPromptOpen]);
 
   useEffect(() => {
     if (!isResetPopupOpen) return;
@@ -219,8 +230,8 @@ const TeaTimer: React.FC = () => {
     if (progressTimerPhase === 'cooling') {
       if (coolingDurationMs === 0) return;
       const coolingEndsAt = progressEndAt + coolingDurationMs;
-      setProgressBorderProgress(getCoolingProgress(currentTime - progressEndAt, coolingDurationMs), 'cooling');
       if (currentTime >= coolingEndsAt) completeCoolingAlert(progressTimerId, mountedAt.current < coolingEndsAt);
+      setProgressBorderProgress(getCoolingProgress(currentTime - progressEndAt, coolingDurationMs), 'cooling');
     } else if (currentTime >= progressEndAt) {
       completePour(progressTimerId, mountedAt.current < progressEndAt);
     }
@@ -246,6 +257,18 @@ const TeaTimer: React.FC = () => {
   }, [syncTimerState]);
 
   useEffect(() => {
+    if (alertDeadline === undefined) return;
+    let timeout: number | undefined;
+    const checkDeadline = () => {
+      const remaining = alertDeadline - Date.now();
+      if (remaining > 0) timeout = window.setTimeout(checkDeadline, remaining);
+      else syncTimerState();
+    };
+    checkDeadline();
+    return () => window.clearTimeout(timeout);
+  }, [alertDeadline, syncTimerState]);
+
+  useEffect(() => {
     if (!progressTimerId || progressEndAt === undefined || !progressTimerPhase) {
       setProgressBorderProgress(0, 'brewing');
       return;
@@ -262,29 +285,28 @@ const TeaTimer: React.FC = () => {
         const progress = getCoolingProgress(-remainingMs, coolingDurationMs);
         setProgressBorderProgress(progress, 'cooling');
         if (progress < 1) frame = requestAnimationFrame(updateProgress);
-        else syncTimerState();
       } else {
         const progress = getBrewingProgress(remainingMs, progressDurationMs);
         setProgressBorderProgress(progress, 'brewing');
         if (remainingMs > 0) frame = requestAnimationFrame(updateProgress);
-        else syncTimerState();
       }
     };
 
     updateProgress();
     return () => { if (frame !== undefined) cancelAnimationFrame(frame); };
-  }, [coolingDurationMs, progressDurationMs, progressEndAt, progressTimerId, progressTimerPhase, setProgressBorderProgress, syncTimerState]);
+  }, [coolingDurationMs, progressDurationMs, progressEndAt, progressTimerId, progressTimerPhase, setProgressBorderProgress]);
 
   const formatTime = (time: number) => {
-    const absTime = Math.abs(time);
-    const displayMinutes = Math.floor(absTime / 60);
-    const displaySeconds = absTime % 60;
-    const sign = time < 0 ? '-' : '';
+    const displayMinutes = Math.floor(time / 60);
+    const displaySeconds = time % 60;
 
-    return `${sign}${displayMinutes.toString().padStart(2, '0')}:${displaySeconds
+    return `${displayMinutes.toString().padStart(2, '0')}:${displaySeconds
       .toString()
       .padStart(2, '0')}`;
   };
+
+  const isNegative = timeLeft < 0;
+  const countdownDigits = formatTime(Math.abs(timeLeft));
 
   const handleConfirmSessionReset = () => {
     if (resetInProgressRef.current) return;
@@ -340,17 +362,15 @@ const TeaTimer: React.FC = () => {
             <canvas ref={progressCanvasRef} className="active-timer-progress" aria-hidden="true" />
             <output
               className="active-timer-digits"
+              data-negative={isNegative ? '' : undefined}
               aria-label={
                 timer
-                  ? timer.phase === 'cooling'
-                    ? `${formatTime(timeLeft)} ${t('overtime')}`
-                    : `${formatTime(timeLeft)} ${t('remaining')}`
+                  ? `${isNegative ? '-' : ''}${countdownDigits} ${t(timer.phase === 'cooling' ? 'overtime' : 'remaining')}`
                   : t('noActiveTimers')
               }
             >
-              {timer
-                ? formatTime(timeLeft)
-                : null}
+              {isNegative && <span className="active-timer-minus" aria-hidden="true">-</span>}
+              {timer && countdownDigits}
             </output>
           </div>
         </div>
@@ -367,6 +387,37 @@ const TeaTimer: React.FC = () => {
           </span>
         </p>
       </div>
+
+      {isStaleSessionPromptOpen && (
+        <dialog
+          ref={staleSessionDialogRef}
+          className="stale-session-dialog"
+          aria-labelledby="stale-session-title"
+          onCancel={(event) => {
+            event.preventDefault();
+            continueSession();
+          }}
+        >
+          <h2 id="stale-session-title">{t('resetTitle')}</h2>
+          <div className="session-reset-popup-actions">
+            <button
+              type="button"
+              className="session-reset-popup-button session-reset-cancel"
+              onClick={continueSession}
+              autoFocus
+            >
+              {t('continueTeaSession')}
+            </button>
+            <button
+              type="button"
+              className="session-reset-popup-button control-button-primary"
+              onClick={() => resetSession(true)}
+            >
+              {t('startNewTeaSession')}
+            </button>
+          </div>
+        </dialog>
+      )}
 
       {isResetPopupOpen && (
       <div
